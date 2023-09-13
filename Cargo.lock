@@ -198,6 +198,8 @@ dependencies = [
  "anyhow",
  "axum",
  "dotenvy",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
