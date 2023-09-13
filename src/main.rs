@@ -1,6 +1,7 @@
 use anyhow::Result;
 
 mod config;
+mod error;
 mod http;
 
 #[tokio::main]
