@@ -9,10 +9,6 @@ pub fn routes() -> Router {
 }
 
 async fn index_route() -> AppResult {
-    tracing::info!("Start index route handler");
-    let span = tracing::trace_span!("index route");
-    let _span = span.enter();
-    tracing::info!("Invoke test function");
     test()?;
     Ok(())
 }
