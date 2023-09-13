@@ -1,13 +1,14 @@
+use crate::http::router;
 use anyhow::Result;
 
 mod config;
-mod web_server;
+mod http;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let config = config::Config::new()?;
 
-    web_server::run(config).await;
+    router::run(config).await;
 
     Ok(())
 }
