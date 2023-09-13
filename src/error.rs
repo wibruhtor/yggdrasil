@@ -54,7 +54,7 @@ impl AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        println!("Something went wrong: {}", self.cause);
+        tracing::error!("Something went wrong: {}", self.cause);
         (
             self.status_code,
             self.message.unwrap_or("Unexpected error".to_owned()),
