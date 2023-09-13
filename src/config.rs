@@ -1,22 +1,20 @@
-use std::{
-    env::{self, VarError},
-    error::Error,
-};
+use anyhow::Result;
+use std::env::{self, VarError};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Config {
     pub http: Http,
 }
 
 impl Config {
-    pub fn new() -> Result<Self, Box<dyn Error>> {
+    pub fn new() -> Result<Self> {
         dotenvy::dotenv()?;
 
         Ok(Config { http: Http::new() })
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Http {
     pub host: String,
     pub port: String,

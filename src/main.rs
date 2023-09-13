@@ -1,12 +1,13 @@
-use std::error::Error;
+use anyhow::Result;
 
 mod config;
+mod web_server;
 
-// #[tokio::main]
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let config = config::Config::new()?;
 
-    println!("{:#?}", config);
+    web_server::run(config).await;
 
     Ok(())
 }
