@@ -1,6 +1,5 @@
 use anyhow::bail;
-use axum::routing::get;
-use axum::Router;
+use axum::{routing::get, Router};
 
 use crate::error::AppResult;
 

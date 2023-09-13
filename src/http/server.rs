@@ -1,17 +1,14 @@
-use axum::Router;
 use tokio::signal;
 
-use crate::{config::Config, http::routes};
+use crate::{config::Config, http::app};
 
 pub async fn run(config: Config) {
     let addr = format!("{}:{}", config.http.host, config.http.port);
 
     tracing::info!("Run server at http://{}", addr);
 
-    let router = Router::new().merge(routes::get());
-
     axum::Server::bind(&addr.parse().unwrap())
-        .serve(router.into_make_service())
+        .serve(app::new().into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap()
