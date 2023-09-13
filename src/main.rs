@@ -1,4 +1,3 @@
-use crate::http::router;
 use anyhow::Result;
 
 mod config;
@@ -8,7 +7,7 @@ mod http;
 async fn main() -> Result<()> {
     let config = config::Config::new()?;
 
-    router::run(config).await;
+    http::server::run(config).await;
 
     Ok(())
 }
