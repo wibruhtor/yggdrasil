@@ -1,29 +1,29 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: ./Dockerfile.dev
-    container_name: hastur-dev
-    restart: on-failure
-    depends_on:
-      pg:
-        condition: service_healthy
-    command: cargo watch -q -c -w src/ -x run
-    ports:
-      - 3000:3000
-    volumes:
-      - ./target:/app/target
-      - ./migrations:/app/migrations
-      - ./src:/app/src
-      - ./Cargo.toml:/app/Cargo.toml
-      - ./Cargo.lock:/app/Cargo.lock
-    environment:
-      HTTP_HOST: 0.0.0.0
-      HTTP_PORT: 3000
-      LOGGING_LEVEL: INFO
-      POSTGRES_URL: "postgres://postgres:secret-password@pg:5432/wibruhtor"
-    networks:
-      - hastur_network
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile.dev
+  #   container_name: hastur-dev
+  #   restart: on-failure
+  #   depends_on:
+  #     pg:
+  #       condition: service_healthy
+  #   command: cargo watch -q -c -w src/ -x run
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     - ./target:/app/target
+  #     - ./migrations:/app/migrations
+  #     - ./src:/app/src
+  #     - ./Cargo.toml:/app/Cargo.toml
+  #     - ./Cargo.lock:/app/Cargo.lock
+  #   environment:
+  #     HTTP_HOST: 0.0.0.0
+  #     HTTP_PORT: 3000
+  #     LOGGING_LEVEL: INFO
+  #     DATABASE_URL: "postgres://postgres:secret-password@pg:5432/wibruhtor"
+  #   networks:
+  #     - hastur_network
   pg:
     image: postgres:15
     container_name: hastur-postgres-dev

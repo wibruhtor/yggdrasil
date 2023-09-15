@@ -1,36 +1,28 @@
-use std::time::Duration;
+use std::sync::Arc;
 
-use axum::{extract::MatchedPath, http::Request, Router};
-use tower_http::{
-    classify::ServerErrorsFailureClass,
-    trace::{DefaultOnResponse, TraceLayer},
+use axum::{Extension, Router};
+use sqlx::{Pool, Postgres};
+
+use crate::{
+    config::Config,
+    dao,
+    service::{self, auth::AuthService},
 };
-use tracing::Span;
 
-use crate::http::routes;
+use super::routes;
 
-pub fn new() -> Router {
-    let middleware = tower::ServiceBuilder::new().layer(
-        TraceLayer::new_for_http()
-            .make_span_with(|request: &Request<_>| {
-                let matched_path = request
-                    .extensions()
-                    .get::<MatchedPath>()
-                    .map(MatchedPath::as_str);
+pub struct AppState {
+    pub auth_service: AuthService,
+}
 
-                tracing::info_span!(
-                    "http_request",
-                    method = ?request.method(),
-                    matched_path,
-                )
-            })
-            .on_response(
-                DefaultOnResponse::new()
-                    .latency_unit(tower_http::LatencyUnit::Millis)
-                    .level(tracing::Level::INFO),
-            )
-            .on_failure(|_: ServerErrorsFailureClass, _: Duration, _: &Span| {}),
-    );
+pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
+    let user_dao = dao::user::UserDao::new(Arc::clone(&pool));
 
-    Router::new().merge(routes::get()).layer(middleware)
+    let auth_service = service::auth::AuthService::new(config.twitch, user_dao);
+
+    let app_state = AppState { auth_service };
+
+    Router::new()
+        .merge(routes::get())
+        .layer(Extension(Arc::new(app_state)))
 }

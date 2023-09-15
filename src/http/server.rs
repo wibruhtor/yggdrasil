@@ -1,14 +1,19 @@
+use std::sync::Arc;
+
+use sqlx::{Pool, Postgres};
 use tokio::signal;
 
 use crate::{config::Config, http::app};
 
-pub async fn run(config: Config) {
+pub async fn run(config: Config, pool: Box<Pool<Postgres>>) {
     let addr = format!("{}:{}", config.http.host, config.http.port);
 
     tracing::info!("Run server at http://{}", addr);
 
+    let app = app::new(config, Arc::new(pool));
+
     axum::Server::bind(&addr.parse().unwrap())
-        .serve(app::new().into_make_service())
+        .serve(app.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap()

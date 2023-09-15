@@ -13,7 +13,7 @@ impl Logging {
     pub fn new() -> Self {
         Logging {
             level: match env::var("LOGGING_LEVEL")
-                .or_default("INFO".to_owned())
+                .or_default("INFO".to_string())
                 .as_str()
             {
                 "ERROR" => Level::ERROR,

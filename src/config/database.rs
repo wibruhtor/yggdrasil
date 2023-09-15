@@ -8,7 +8,7 @@ pub struct Database {
 impl Database {
     pub fn new() -> Self {
         Database {
-            postgres_url: env::var("POSTGRES_URL").expect("fail get POSGRES_URL"),
+            postgres_url: env::var("DATABASE_URL").expect("fail get DATABASE_URL"),
         }
     }
 }

@@ -11,8 +11,8 @@ pub struct Http {
 impl Http {
     pub fn new() -> Self {
         Http {
-            host: env::var("HTTP_HOST").or_default("0.0.0.0".to_owned()),
-            port: env::var("HTTP_PORT").or_default("3000".to_owned()),
+            host: env::var("HTTP_HOST").or_default("0.0.0.0".to_string()),
+            port: env::var("HTTP_PORT").or_default("3000".to_string()),
         }
     }
 }

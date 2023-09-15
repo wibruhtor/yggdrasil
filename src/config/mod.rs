@@ -1,15 +1,18 @@
-use anyhow::Result;
 use std::env::VarError;
+
+use anyhow::Result;
 
 mod database;
 mod http;
 mod logging;
+pub mod twitch;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Config {
     pub http: http::Http,
     pub logging: logging::Logging,
     pub database: database::Database,
+    pub twitch: twitch::Twitch,
 }
 
 impl Config {
@@ -25,6 +28,7 @@ impl Config {
             http: http::Http::new(),
             logging: logging::Logging::new(),
             database: database::Database::new(),
+            twitch: twitch::Twitch::new(),
         })
     }
 }
@@ -36,7 +40,7 @@ trait OrDefault {
 impl OrDefault for Result<String, VarError> {
     fn or_default(&self, default: String) -> String {
         match self {
-            Ok(v) => v.to_owned(),
+            Ok(v) => v.to_string(),
             Err(_) => default,
         }
     }

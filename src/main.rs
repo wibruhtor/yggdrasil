@@ -1,9 +1,6 @@
 use anyhow::Result;
+use hastur::{config, http};
 use sqlx::PgPool;
-
-mod config;
-mod error;
-mod http;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -20,7 +17,7 @@ async fn main() -> Result<()> {
 
     sqlx::migrate!().run(&pool).await?;
 
-    http::server::run(config).await;
+    http::server::run(config, Box::new(pool)).await;
 
     Ok(())
 }
