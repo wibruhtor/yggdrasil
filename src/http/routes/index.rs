@@ -7,5 +7,5 @@ pub fn routes() -> Router {
 }
 
 async fn index_route() -> AppResult<&'static str> {
-    Ok("Hello, world!")
+    Ok("Hello, world! :)")
 }

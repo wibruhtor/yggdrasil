@@ -1,0 +1,38 @@
+services:
+  app:
+    image: ghcr.io/wibruhtor/hastur
+    container_name: hastur
+    restart: on-failure
+    depends_on:
+      pg:
+        condition: service_healthy
+    ports:
+      - 3000:3000
+    volumes:
+      - ./target:/app/target
+      - ./migrations:/app/migrations
+      - ./src:/app/src
+      - ./Cargo.toml:/app/Cargo.toml
+      - ./Cargo.lock:/app/Cargo.lock
+    env_file:
+      - .env
+    networks:
+      - hastur_network
+  pg:
+    image: postgres:15
+    container_name: hastur-postgres
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    networks:
+      - hastur_network
+
+networks:
+  hastur_network:
