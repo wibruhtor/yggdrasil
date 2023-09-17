@@ -5,7 +5,7 @@ use axum::{
 };
 
 #[allow(dead_code)]
-pub type AppResult<T = ()> = Result<T, AppError>;
+pub type AppResult<T = ()>  = Result<T, AppError>;
 
 #[derive(Debug)]
 pub struct AppError {

@@ -3,4 +3,5 @@ mod dao;
 mod domain;
 mod error;
 pub mod http;
+mod jwt;
 mod service;

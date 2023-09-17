@@ -2,9 +2,10 @@ use std::env::VarError;
 
 use anyhow::Result;
 
-mod database;
-mod http;
-mod logging;
+pub mod database;
+pub mod http;
+pub mod jwt;
+pub mod logging;
 pub mod twitch;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -13,6 +14,7 @@ pub struct Config {
     pub logging: logging::Logging,
     pub database: database::Database,
     pub twitch: twitch::Twitch,
+    pub jwt: jwt::Jwt,
 }
 
 impl Config {
@@ -29,6 +31,7 @@ impl Config {
             logging: logging::Logging::new(),
             database: database::Database::new(),
             twitch: twitch::Twitch::new(),
+            jwt: jwt::Jwt::new(),
         })
     }
 }

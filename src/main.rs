@@ -1,6 +1,6 @@
 use anyhow::Result;
-use hastur::{config, http};
 use sqlx::PgPool;
+use yggdrasil::{config, http};
 
 #[tokio::main]
 async fn main() -> Result<()> {

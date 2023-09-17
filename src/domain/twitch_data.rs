@@ -1,9 +1,7 @@
-use uuid::Uuid;
+use serde::Serialize;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, sqlx::FromRow)]
 pub struct TwitchData {
-    pub user_id: Uuid,
-    pub access_token: String,
+    pub user_id: String,
     pub refresh_token: String,
-    pub expired_at: chrono::NaiveDateTime,
 }

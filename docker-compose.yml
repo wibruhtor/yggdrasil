@@ -1,7 +1,7 @@
 services:
   app:
-    image: ghcr.io/wibruhtor/hastur
-    container_name: hastur
+    image: ghcr.io/wibruhtor/yggdrasil
+    container_name: yggdrasil
     restart: on-failure
     depends_on:
       pg:
@@ -17,10 +17,10 @@ services:
     env_file:
       - .env
     networks:
-      - hastur_network
+      - wibruhtor_network
   pg:
     image: postgres:15
-    container_name: hastur-postgres
+    container_name: wibruhtor-postgres
     restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
@@ -32,7 +32,7 @@ services:
     env_file:
       - .env
     networks:
-      - hastur_network
+      - wibruhtor_network
 
 networks:
-  hastur_network:
+  wibruhtor_network:

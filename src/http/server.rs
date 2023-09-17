@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 use sqlx::{Pool, Postgres};
@@ -13,7 +14,7 @@ pub async fn run(config: Config, pool: Box<Pool<Postgres>>) {
     let app = app::new(config, Arc::new(pool));
 
     axum::Server::bind(&addr.parse().unwrap())
-        .serve(app.into_make_service())
+        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap()
