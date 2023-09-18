@@ -32,6 +32,8 @@ sqlx = { version = "0.7", features = [
   "json",
   "chrono",
 ] }
+# Metrics
+axum-prometheus = "0.4"
 
 [profile.dev]
 opt-level = 0

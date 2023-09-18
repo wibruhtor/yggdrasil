@@ -2,8 +2,9 @@ use std::{sync::Arc, time::Duration};
 
 use axum::{
     http::{HeaderValue, Method},
-    middleware, Extension, Router,
+    middleware, routing, Extension, Router,
 };
+use axum_prometheus::PrometheusMetricLayer;
 use reqwest::{
     header::{ACCEPT, AUTHORIZATION, ORIGIN},
     StatusCode,
@@ -28,10 +29,17 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let auth_service =
         service::AuthService::new(config.twitch, jwt, user_dao, twitch_data_dao, token_dao);
 
+    let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
+
     Router::new()
+        .route(
+            "/metrics",
+            routing::get(|| async move { metric_handle.render() }),
+        )
         .merge(routes::get().fallback(handler_404))
         .layer(Extension(Arc::new(auth_service)))
         .layer(middleware::from_fn(logger_middleware))
+        .layer(prometheus_layer)
         .layer(middleware::from_fn(request_id_middleware))
         .layer(
             CorsLayer::new()
