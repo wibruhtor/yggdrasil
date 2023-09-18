@@ -1,33 +1,30 @@
 use std::sync::Arc;
 
-use axum::{Extension, Router};
+use axum::{middleware, Extension, Router};
 use sqlx::{Pool, Postgres};
 
-use crate::{
-    config::Config,
-    dao, jwt,
-    service::{self, auth::AuthService},
+use crate::{config::Config, dao, jwt, service};
+
+use super::{
+    middleware::{logger_middleware, request_id_middleware},
+    routes,
 };
-
-use super::routes;
-
-pub struct AppState {
-    pub auth_service: AuthService,
-}
 
 pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let jwt = jwt::Jwt::new(&config.jwt.secret);
 
-    let user_dao = dao::user::UserDao::new(Arc::clone(&pool));
-    let twitch_data_dao = dao::twitch_data::TwitchDataDao::new(Arc::clone(&pool));
-    let token_dao = dao::token::TokenDao::new(Arc::clone(&pool));
+    let user_dao = dao::UserDao::new(Arc::clone(&pool));
+    let twitch_data_dao = dao::TwitchDataDao::new(Arc::clone(&pool));
+    let token_dao = dao::TokenDao::new(Arc::clone(&pool));
 
     let auth_service =
-        service::auth::AuthService::new(config.twitch, jwt, user_dao, twitch_data_dao, token_dao);
+        service::AuthService::new(config.twitch, jwt, user_dao, twitch_data_dao, token_dao);
 
-    let app_state = AppState { auth_service };
+    // let app_state = AppState { auth_service };
 
     Router::new()
         .merge(routes::get())
-        .layer(Extension(Arc::new(app_state)))
+        .layer(Extension(Arc::new(auth_service)))
+        .layer(middleware::from_fn(logger_middleware))
+        .layer(middleware::from_fn(request_id_middleware))
 }

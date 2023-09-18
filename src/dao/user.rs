@@ -4,7 +4,7 @@ use axum::http::StatusCode;
 use sqlx::{Pool, Postgres};
 
 use crate::{
-    domain::user::User,
+    domain::User,
     error::{AppError, AppResult},
 };
 

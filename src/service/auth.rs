@@ -2,12 +2,13 @@ use std::{collections::HashMap, sync::Arc};
 
 use reqwest::StatusCode;
 use serde::Deserialize;
+use uuid::Uuid;
 
 use crate::{
     config,
-    dao::{token::TokenDao, twitch_data::TwitchDataDao, user::UserDao},
+    dao::{TokenDao, TwitchDataDao, UserDao},
     error::{AppError, AppResult},
-    jwt,
+    jwt::{self, Claims},
 };
 
 const AUTHORIZE_URL: &str = "https://id.twitch.tv/oauth2/authorize";
@@ -191,18 +192,39 @@ impl AuthService {
         });
         let access_token = self
             .jwt
-            .generate_access_token(&token.id, &user.id, &user.username, &token.authorized_at)?
+            .generate_access_token(&token.id, &user.id, &user.username, &token.refreshed_at)?
             .0;
         span.in_scope(|| {
             tracing::debug!("create refresh token");
         });
         let refresh_token = self
             .jwt
-            .generate_refresh_token(&token.id, &user.id, &user.username, &token.authorized_at)?
+            .generate_refresh_token(&token.id, &user.id, &user.username, &token.refreshed_at)?
             .0;
         // endregion
 
         Ok((access_token, refresh_token))
+    }
+
+    pub async fn validate_token(&self, token: &str) -> AppResult<Claims> {
+        let claims = self.jwt.validate(token)?;
+
+        let token = self.token_dao.get(&claims.jti).await.map_err(|err| {
+            err.status_code(StatusCode::FORBIDDEN)
+                .message("invalid token".to_string())
+        })?;
+        if claims.sub != token.user_id {
+            Err(AppError::new(StatusCode::FORBIDDEN).message("invalid sub".to_string()))
+        } else if claims.nbf != token.refreshed_at.timestamp() {
+            Err(AppError::new(StatusCode::FORBIDDEN)
+                .message("expired token by refresh".to_string()))
+        } else {
+            Ok(claims)
+        }
+    }
+
+    pub async fn delete_token(&self, token_id: &Uuid) -> AppResult {
+        self.token_dao.delete(token_id).await
     }
 }
 

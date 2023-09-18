@@ -6,7 +6,7 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    domain::token::Token,
+    domain::Token,
     error::{AppError, AppResult},
 };
 
@@ -22,7 +22,7 @@ impl TokenDao {
     }
 
     pub async fn create(&self, user_id: &str, user_agent: &str, ip: &str) -> AppResult<Token> {
-        let span = tracing::debug_span!("create twitch data");
+        let span = tracing::debug_span!("create token");
         let _span = span.enter();
 
         let now = Utc::now().naive_utc();
@@ -52,5 +52,42 @@ impl TokenDao {
             authorized_at: rec.authorized_at,
             refreshed_at: rec.refreshed_at,
         })
+    }
+
+    pub async fn get(&self, id: &Uuid) -> AppResult<Token> {
+        let span = tracing::debug_span!("get token");
+        let _span = span.enter();
+
+        let rec = sqlx::query!(
+            r#"SELECT id, user_id, user_agent, ip, authorized_at, refreshed_at FROM tokens WHERE id = $1 LIMIT 1"#,
+            id,
+        )
+        .fetch_one((*self.pool).as_ref())
+        .await?;
+
+        Ok(Token {
+            id: rec.id,
+            user_id: rec.user_id,
+            user_agent: rec.user_agent,
+            ip: rec.ip,
+            authorized_at: rec.authorized_at,
+            refreshed_at: rec.refreshed_at,
+        })
+    }
+
+    pub async fn delete(&self, id: &Uuid) -> AppResult {
+        let span = tracing::debug_span!("delete token");
+        let _span = span.enter();
+
+        let rec = sqlx::query!(r#"DELETE FROM tokens WHERE id = $1"#, id,)
+            .execute((*self.pool).as_ref())
+            .await?;
+
+        if rec.rows_affected() == 0 {
+            Err(AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                .message("token not found".to_string()))
+        } else {
+            Ok(())
+        }
     }
 }

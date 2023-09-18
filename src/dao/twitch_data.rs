@@ -4,7 +4,7 @@ use axum::http::StatusCode;
 use sqlx::{Pool, Postgres};
 
 use crate::{
-    domain::twitch_data::TwitchData,
+    domain::TwitchData,
     error::{AppError, AppResult},
 };
 

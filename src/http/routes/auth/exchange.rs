@@ -3,16 +3,15 @@ use std::{net::SocketAddr, sync::Arc};
 use axum::{extract::ConnectInfo, headers::UserAgent, Extension, Json, TypedHeader};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::AppResult, http::app::AppState};
+use crate::{error::AppResult, service::AuthService};
 
 pub async fn handler(
-    Extension(app_state): Extension<Arc<AppState>>,
+    Extension(auth_service): Extension<Arc<AuthService>>,
     TypedHeader(user_agent): TypedHeader<UserAgent>,
     ConnectInfo(socket): ConnectInfo<SocketAddr>,
     Json(request): Json<ExchangeRequest>,
 ) -> AppResult<Json<ExchangeResponse>> {
-    let (access_token, refresh_token) = app_state
-        .auth_service
+    let (access_token, refresh_token) = auth_service
         .exchange_code(
             &request.code,
             user_agent.as_str(),

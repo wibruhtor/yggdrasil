@@ -2,10 +2,12 @@ use anyhow::Error;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
+    Json,
 };
+use serde_json::json;
 
 #[allow(dead_code)]
-pub type AppResult<T = ()>  = Result<T, AppError>;
+pub type AppResult<T = ()> = Result<T, AppError>;
 
 #[derive(Debug)]
 pub struct AppError {
@@ -71,7 +73,9 @@ impl IntoResponse for AppError {
 
         (
             self.status_code,
-            self.message.unwrap_or("unexpected error".to_owned()),
+            Json(json!({
+                "message": self.message.unwrap_or("unexpected error".to_owned())
+            })),
         )
             .into_response()
     }
