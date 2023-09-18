@@ -75,6 +75,29 @@ impl TokenDao {
         })
     }
 
+    pub async fn refresh(&self, id: &Uuid) -> AppResult<Token> {
+        let span = tracing::debug_span!("refresh token");
+        let _span = span.enter();
+
+        let now = Utc::now().naive_utc();
+        let rec = sqlx::query!(
+            r#"UPDATE tokens SET refreshed_at = $1 WHERE id = $2 RETURNING id, user_id, user_agent, ip, authorized_at, refreshed_at"#,
+            now,
+            id
+        )
+        .fetch_one((*self.pool).as_ref())
+        .await?;
+
+        Ok(Token {
+            id: rec.id,
+            user_id: rec.user_id,
+            user_agent: rec.user_agent,
+            ip: rec.ip,
+            authorized_at: rec.authorized_at,
+            refreshed_at: rec.refreshed_at,
+        })
+    }
+
     pub async fn delete(&self, id: &Uuid) -> AppResult {
         let span = tracing::debug_span!("delete token");
         let _span = span.enter();

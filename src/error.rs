@@ -54,21 +54,20 @@ impl AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        match &self.message {
-            Some(message) => match self.cause {
-                Some(cause) => tracing::error!({ cause = format!("{}", cause) }, "{}", message),
-                None => {
-                    tracing::error!(message)
+        if self.cause.is_some() {
+            match &self.message {
+                Some(message) => {
+                    tracing::error!(
+                        { cause = format!("{}", self.cause.unwrap()) },
+                        "{}",
+                        message
+                    )
                 }
-            },
-            None => match self.cause {
-                Some(cause) => {
-                    tracing::error!({ cause = format!("{}", cause) }, "unexpected error")
-                }
-                None => {
-                    tracing::error!("unexpected error")
-                }
-            },
+                None => tracing::error!(
+                    { cause = format!("{}", self.cause.unwrap()) },
+                    "unexpected error"
+                ),
+            }
         }
 
         (

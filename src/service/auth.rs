@@ -8,7 +8,7 @@ use crate::{
     config,
     dao::{TokenDao, TwitchDataDao, UserDao},
     error::{AppError, AppResult},
-    jwt::{self, Claims},
+    jwt::{self, Claims, TokenType},
 };
 
 const AUTHORIZE_URL: &str = "https://id.twitch.tv/oauth2/authorize";
@@ -207,12 +207,19 @@ impl AuthService {
     }
 
     pub async fn validate_token(&self, token: &str) -> AppResult<Claims> {
+        let span = tracing::debug_span!("validate token");
+        let _span = span.enter();
+
         let claims = self.jwt.validate(token)?;
 
+        span.in_scope(|| {
+            tracing::debug!("get token");
+        });
         let token = self.token_dao.get(&claims.jti).await.map_err(|err| {
             err.status_code(StatusCode::FORBIDDEN)
                 .message("invalid token".to_string())
         })?;
+
         if claims.sub != token.user_id {
             Err(AppError::new(StatusCode::FORBIDDEN).message("invalid sub".to_string()))
         } else if claims.nbf != token.refreshed_at.timestamp() {
@@ -223,8 +230,64 @@ impl AuthService {
         }
     }
 
-    pub async fn delete_token(&self, token_id: &Uuid) -> AppResult {
+    pub async fn delete_token(&self, token_id: &Uuid, token_type: TokenType) -> AppResult {
+        let span = tracing::debug_span!("delete token");
+        let _span = span.enter();
+
+        if token_type != TokenType::Access {
+            return Err(AppError::new(StatusCode::FORBIDDEN).message("invalid token".to_string()));
+        }
+
+        span.in_scope(|| {
+            tracing::debug!("delete token");
+        });
         self.token_dao.delete(token_id).await
+    }
+
+    pub async fn refresh_token(&self, token: &str) -> AppResult<(String, String)> {
+        let span = tracing::debug_span!("refresh token");
+        let _span = span.enter();
+
+        span.in_scope(|| {
+            tracing::debug!("validate token");
+        });
+        let claims = self.validate_token(token).await?;
+        let token_type = claims.token_type();
+        if token_type.is_none() || token_type.clone().unwrap() != TokenType::Refresh {
+            return Err(AppError::new(StatusCode::FORBIDDEN).message("invalid token".to_string()));
+        }
+
+        span.in_scope(|| {
+            tracing::debug!("refresh token");
+        });
+        let token = self.token_dao.refresh(&claims.jti).await?;
+
+        span.in_scope(|| {
+            tracing::debug!("create access token");
+        });
+        let access_token = self
+            .jwt
+            .generate_access_token(
+                &token.id,
+                &claims.sub,
+                &claims.username,
+                &token.refreshed_at,
+            )?
+            .0;
+        span.in_scope(|| {
+            tracing::debug!("create refresh token");
+        });
+        let refresh_token = self
+            .jwt
+            .generate_refresh_token(
+                &token.id,
+                &claims.sub,
+                &claims.username,
+                &token.refreshed_at,
+            )?
+            .0;
+
+        Ok((access_token, refresh_token))
     }
 }
 

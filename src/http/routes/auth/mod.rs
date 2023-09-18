@@ -1,30 +1,19 @@
-use std::sync::Arc;
+use axum::{middleware, routing, Router};
 
-use axum::{middleware, routing, Extension, Router};
-use reqwest::StatusCode;
-
-use crate::{
-    error::AppResult, http::middleware::auth_middleware, jwt::Claims, service::AuthService,
-};
+use crate::http::middleware::auth_middleware;
 
 mod authorize;
 mod exchange;
+mod logout;
+mod refresh;
 
 pub fn routes() -> Router {
     Router::new()
         .route("/authorize", routing::get(authorize::handler))
         .route("/exchange", routing::post(exchange::handler))
+        .route("/refresh", routing::post(refresh::handler))
         .route(
             "/logout",
-            routing::delete(handler).layer(middleware::from_fn(auth_middleware)),
+            routing::delete(logout::handler).layer(middleware::from_fn(auth_middleware)),
         )
-}
-
-async fn handler(
-    Extension(auth_service): Extension<Arc<AuthService>>,
-    Extension(claims): Extension<Arc<Claims>>,
-) -> AppResult<StatusCode> {
-    auth_service.delete_token(&claims.jti).await?;
-
-    Ok(StatusCode::NO_CONTENT)
 }

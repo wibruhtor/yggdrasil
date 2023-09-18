@@ -12,6 +12,8 @@ const AUDIENCE: &str = "wibruhtor";
 const ISSUER: &str = "api.wibruhtor.ru";
 const ACCESS_TOKEN_TTL_IN_HOURS: i64 = 1;
 const REFRESH_TOKEN_TTL_IN_DAYS: i64 = 365;
+const ACCESS_TOKEN: &str = "access_token";
+const REFRESH_TOKEN: &str = "refresh_token";
 
 #[allow(dead_code)]
 pub struct Jwt {
@@ -64,7 +66,7 @@ impl Jwt {
         time: &NaiveDateTime,
     ) -> AppResult<(String, Claims)> {
         let duration = Duration::hours(ACCESS_TOKEN_TTL_IN_HOURS);
-        self.generate_token(id, user_id, username, "access_token", &duration, time)
+        self.generate_token(id, user_id, username, ACCESS_TOKEN, &duration, time)
     }
 
     pub fn generate_refresh_token(
@@ -75,7 +77,7 @@ impl Jwt {
         time: &NaiveDateTime,
     ) -> AppResult<(String, Claims)> {
         let duration = Duration::days(REFRESH_TOKEN_TTL_IN_DAYS);
-        self.generate_token(id, user_id, username, "refresh_token", &duration, time)
+        self.generate_token(id, user_id, username, REFRESH_TOKEN, &duration, time)
     }
 
     fn generate_token(
@@ -121,4 +123,31 @@ pub struct Claims {
     pub nbf: i64,         // Not Before (as UTC timestamp)
     pub sub: String,      // Subject (user id)
     pub username: String, // Username
+}
+
+impl Claims {
+    pub fn token_type(&self) -> Option<TokenType> {
+        if self.typ == ACCESS_TOKEN {
+            Some(TokenType::Access)
+        } else if self.typ == REFRESH_TOKEN {
+            Some(TokenType::Refresh)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TokenType {
+    Access,
+    Refresh,
+}
+
+impl ToString for TokenType {
+    fn to_string(&self) -> String {
+        match self {
+            TokenType::Access => ACCESS_TOKEN.to_string(),
+            TokenType::Refresh => REFRESH_TOKEN.to_string(),
+        }
+    }
 }
