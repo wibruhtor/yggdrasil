@@ -6,6 +6,7 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
+    crypt::Crypt,
     domain::Token,
     error::{AppError, AppResult},
 };
@@ -13,12 +14,13 @@ use crate::{
 #[allow(dead_code)]
 pub struct TokenDao {
     pool: Arc<Box<Pool<Postgres>>>,
+    crypt: Arc<Crypt>,
 }
 
 #[allow(dead_code)]
 impl TokenDao {
-    pub fn new(pool: Arc<Box<Pool<Postgres>>>) -> Arc<Self> {
-        Arc::new(TokenDao { pool })
+    pub fn new(pool: Arc<Box<Pool<Postgres>>>, crypt: Arc<Crypt>) -> Arc<Self> {
+        Arc::new(TokenDao { pool, crypt })
     }
 
     pub async fn create(&self, user_id: &str, user_agent: &str, ip: &str) -> AppResult<Token> {
@@ -26,12 +28,13 @@ impl TokenDao {
         let _span = span.enter();
 
         let now = Utc::now().naive_utc();
+        let crypted_ip = self.crypt.encrypt_str(&ip);
         let rec = sqlx::query!(
             r#"INSERT INTO tokens (id, user_id, user_agent, ip, authorized_at, refreshed_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, user_agent, ip, authorized_at, refreshed_at"#,
             Uuid::new_v4(),
             user_id,
             user_agent,
-            ip,
+            crypted_ip,
             now,
             now,
         )
@@ -44,11 +47,12 @@ impl TokenDao {
             _ => e.into(),
         })?;
 
+        let decrypted_ip = self.crypt.decrypt_str(&rec.ip)?;
         Ok(Token {
             id: rec.id,
             user_id: rec.user_id,
             user_agent: rec.user_agent,
-            ip: rec.ip,
+            ip: decrypted_ip,
             authorized_at: rec.authorized_at,
             refreshed_at: rec.refreshed_at,
         })
@@ -65,11 +69,12 @@ impl TokenDao {
         .fetch_one((*self.pool).as_ref())
         .await?;
 
+        let decrypted_ip = self.crypt.decrypt_str(&rec.ip)?;
         Ok(Token {
             id: rec.id,
             user_id: rec.user_id,
             user_agent: rec.user_agent,
-            ip: rec.ip,
+            ip: decrypted_ip,
             authorized_at: rec.authorized_at,
             refreshed_at: rec.refreshed_at,
         })
@@ -88,11 +93,12 @@ impl TokenDao {
         .fetch_one((*self.pool).as_ref())
         .await?;
 
+        let decrypted_ip = self.crypt.decrypt_str(&rec.ip)?;
         Ok(Token {
             id: rec.id,
             user_id: rec.user_id,
             user_agent: rec.user_agent,
-            ip: rec.ip,
+            ip: decrypted_ip,
             authorized_at: rec.authorized_at,
             refreshed_at: rec.refreshed_at,
         })

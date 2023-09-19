@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS tokens (
   id uuid PRIMARY KEY,
   user_id varchar NOT NULL,
   user_agent varchar NOT NULL,
-  ip varchar(32) NOT NULL,
+  ip varchar NOT NULL,
   authorized_at timestamp NOT NULL,
   refreshed_at timestamp NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE

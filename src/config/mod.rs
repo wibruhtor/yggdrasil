@@ -2,6 +2,7 @@ use std::env::VarError;
 
 use anyhow::Result;
 
+pub mod crypt;
 pub mod database;
 pub mod http;
 pub mod jwt;
@@ -15,6 +16,7 @@ pub struct Config {
     pub database: database::Database,
     pub twitch: twitch::Twitch,
     pub jwt: jwt::Jwt,
+    pub crypt: crypt::Crypt,
 }
 
 impl Config {
@@ -32,6 +34,7 @@ impl Config {
             database: database::Database::new(),
             twitch: twitch::Twitch::new(),
             jwt: jwt::Jwt::new(),
+            crypt: crypt::Crypt::new(),
         })
     }
 }

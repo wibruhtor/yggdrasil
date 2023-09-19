@@ -1,4 +1,5 @@
 pub mod config;
+mod crypt;
 mod dao;
 mod domain;
 mod error;

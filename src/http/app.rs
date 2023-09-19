@@ -12,7 +12,7 @@ use reqwest::{
 use sqlx::{Pool, Postgres};
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
 
-use crate::{config::Config, dao, error::AppError, jwt, service};
+use crate::{config::Config, crypt, dao, error::AppError, jwt, service};
 
 use super::{
     middleware::{logger_middleware, request_id_middleware},
@@ -21,10 +21,11 @@ use super::{
 
 pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let jwt = jwt::Jwt::new(&config.jwt.secret);
+    let crypt = crypt::Crypt::new(&config.crypt.secret);
 
     let user_dao = dao::UserDao::new(Arc::clone(&pool));
     let twitch_data_dao = dao::TwitchDataDao::new(Arc::clone(&pool));
-    let token_dao = dao::TokenDao::new(Arc::clone(&pool));
+    let token_dao = dao::TokenDao::new(Arc::clone(&pool), Arc::new(crypt));
 
     let auth_service =
         service::AuthService::new(config.twitch, jwt, user_dao, twitch_data_dao, token_dao);

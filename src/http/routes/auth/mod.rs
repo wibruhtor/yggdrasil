@@ -6,6 +6,7 @@ mod authorize;
 mod exchange;
 mod logout;
 mod refresh;
+mod sessions;
 
 pub fn routes() -> Router {
     Router::new()
@@ -16,4 +17,5 @@ pub fn routes() -> Router {
             "/logout",
             routing::delete(logout::handler).layer(middleware::from_fn(auth_middleware)),
         )
+        .nest("/sessions", sessions::routes())
 }
