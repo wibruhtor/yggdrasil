@@ -1,14 +1,13 @@
 use std::{sync::Arc, time::Duration};
 
 use axum::{
-    http::{HeaderValue, Method},
+    http::{
+        header::{ACCEPT, AUTHORIZATION, ORIGIN},
+        HeaderValue, Method, StatusCode,
+    },
     middleware, routing, Extension, Router,
 };
 use axum_prometheus::PrometheusMetricLayer;
-use reqwest::{
-    header::{ACCEPT, AUTHORIZATION, ORIGIN},
-    StatusCode,
-};
 use sqlx::{Pool, Postgres};
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
 
@@ -26,6 +25,8 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let user_dao = dao::UserDao::new(Arc::clone(&pool));
     let twitch_data_dao = dao::TwitchDataDao::new(Arc::clone(&pool));
     let token_dao = dao::TokenDao::new(Arc::clone(&pool), Arc::clone(&crypt));
+    let ban_word_filter_dao = dao::BanWordFilterDao::new(Arc::clone(&pool));
+    let ban_word_dao = dao::BanWordDao::new(Arc::clone(&pool));
 
     let auth_service = service::AuthService::new(
         Arc::new(config.twitch),
@@ -35,6 +36,8 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
         Arc::clone(&token_dao),
     );
     let session_service = service::SessionService::new(Arc::clone(&token_dao));
+    let ban_word_service =
+        service::BanWordService::new(Arc::clone(&ban_word_filter_dao), Arc::clone(&ban_word_dao));
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
@@ -46,6 +49,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
         .merge(routes::get().fallback(handler_404))
         .layer(Extension(Arc::new(auth_service)))
         .layer(Extension(Arc::new(session_service)))
+        .layer(Extension(Arc::new(ban_word_service)))
         .layer(middleware::from_fn(logger_middleware))
         .layer(prometheus_layer)
         .layer(middleware::from_fn(request_id_middleware))

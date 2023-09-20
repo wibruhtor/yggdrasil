@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use reqwest::StatusCode;
+use axum::http::StatusCode;
 use serde::Deserialize;
 use uuid::Uuid;
 

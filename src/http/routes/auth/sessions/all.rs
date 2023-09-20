@@ -9,7 +9,7 @@ pub async fn handler(
     Extension(session_service): Extension<Arc<SessionService>>,
     Extension(claims): Extension<Arc<Claims>>,
 ) -> AppResult<Json<AllSessionsResponse>> {
-    let sessions = session_service.get_all(&claims.sub).await?;
+    let sessions = session_service.get_all_sessions(&claims.sub).await?;
 
     Ok(Json(AllSessionsResponse { sessions }))
 }

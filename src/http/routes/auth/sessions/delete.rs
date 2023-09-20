@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use axum::{extract::Path, Extension};
-use reqwest::StatusCode;
+use axum::{extract::Path, http::StatusCode, Extension};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -10,16 +9,16 @@ use crate::{error::AppResult, jwt::Claims, service::SessionService};
 pub async fn handler(
     Extension(session_service): Extension<Arc<SessionService>>,
     Extension(claims): Extension<Arc<Claims>>,
-    Path(path_params): Path<DeletePathParams>,
+    Path(path_params): Path<DeleteSessionPathParams>,
 ) -> AppResult<StatusCode> {
     session_service
-        .delete(&claims.sub, &path_params.session_id)
+        .delete_session(&claims.sub, &path_params.session_id)
         .await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
 
 #[derive(Deserialize)]
-pub struct DeletePathParams {
+pub struct DeleteSessionPathParams {
     session_id: Uuid,
 }

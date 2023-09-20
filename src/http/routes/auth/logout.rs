@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use axum::Extension;
-use reqwest::StatusCode;
+use axum::{http::StatusCode, Extension};
 
 use crate::{
     error::{AppError, AppResult},

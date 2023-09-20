@@ -1,4 +1,6 @@
-use axum::{routing, Router};
+use axum::{middleware, routing, Router};
+
+use crate::http::middleware::auth_middleware;
 
 mod all;
 mod ban_words;
@@ -15,4 +17,5 @@ pub fn routes() -> Router {
         .route("/:ban_word_filter_id", routing::put(update::handler))
         .route("/:ban_word_filter_id", routing::delete(delete::handler))
         .nest("/:ban_word_filter_id/ban-words", ban_words::routes())
+        .layer(middleware::from_fn(auth_middleware))
 }

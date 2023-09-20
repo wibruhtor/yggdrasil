@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ban_words.word FROM ban_words INNER JOIN ban_word_filters ON ban_word_filters.id = ban_words.ban_word_filter_id WHERE ban_words.ban_word_filter_id = $1 AND ban_word_filters.user_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "word",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "691ca09823acce79260173c62789ab2eeeceef559850a6e7ff73d0913bd2ef5c"
+}

@@ -15,7 +15,7 @@ impl SessionService {
         SessionService { token_dao }
     }
 
-    pub async fn get_all(&self, user_id: &str) -> AppResult<Vec<Token>> {
+    pub async fn get_all_sessions(&self, user_id: &str) -> AppResult<Vec<Token>> {
         let span = tracing::debug_span!("get all sessions by user id");
         let _span = span.enter();
 
@@ -26,7 +26,7 @@ impl SessionService {
         Ok(tokens)
     }
 
-    pub async fn delete(&self, user_id: &str, token_id: &Uuid) -> AppResult {
+    pub async fn delete_session(&self, user_id: &str, token_id: &Uuid) -> AppResult {
         let span = tracing::debug_span!("delete session by user id and token id");
         let _span = span.enter();
 
@@ -40,7 +40,11 @@ impl SessionService {
         Ok(())
     }
 
-    pub async fn delete_all_exclude_current(&self, user_id: &str, token_id: &Uuid) -> AppResult {
+    pub async fn delete_all_sessions_exclude_current(
+        &self,
+        user_id: &str,
+        token_id: &Uuid,
+    ) -> AppResult {
         let span = tracing::debug_span!("delete all sessions by user id exclude current");
         let _span = span.enter();
 

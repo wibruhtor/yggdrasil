@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
+use axum::http::StatusCode;
 use chrono::{Duration, NaiveDateTime};
 use jsonwebtoken::{
     decode, encode, errors::ErrorKind, Algorithm, DecodingKey, EncodingKey, Header, Validation,
 };
-use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

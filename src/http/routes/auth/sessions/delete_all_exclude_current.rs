@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
-use axum::Extension;
-use reqwest::StatusCode;
+use axum::{http::StatusCode, Extension};
 
 use crate::{error::AppResult, jwt::Claims, service::SessionService};
 
@@ -10,7 +9,7 @@ pub async fn handler(
     Extension(claims): Extension<Arc<Claims>>,
 ) -> AppResult<StatusCode> {
     session_service
-        .delete_all_exclude_current(&claims.sub, &claims.jti)
+        .delete_all_sessions_exclude_current(&claims.sub, &claims.jti)
         .await?;
 
     Ok(StatusCode::NO_CONTENT)

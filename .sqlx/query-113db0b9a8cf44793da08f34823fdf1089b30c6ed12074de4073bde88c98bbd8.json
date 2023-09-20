@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO ban_words (ban_word_filter_id, word) SELECT * FROM unnest($1::uuid[], $2::text[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "113db0b9a8cf44793da08f34823fdf1089b30c6ed12074de4073bde88c98bbd8"
+}

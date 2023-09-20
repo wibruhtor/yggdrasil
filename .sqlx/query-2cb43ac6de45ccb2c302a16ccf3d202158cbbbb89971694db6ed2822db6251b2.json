@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM ban_words WHERE ban_word_filter_id = $1 AND word = any($2::text[]);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2cb43ac6de45ccb2c302a16ccf3d202158cbbbb89971694db6ed2822db6251b2"
+}

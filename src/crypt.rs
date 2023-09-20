@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
+use axum::http::StatusCode;
 use magic_crypt::{new_magic_crypt, MagicCrypt256, MagicCryptTrait};
-use reqwest::StatusCode;
 
 use crate::error::{AppError, AppResult};
 

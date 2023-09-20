@@ -1,19 +1,30 @@
 use std::sync::Arc;
 
-use axum::{extract::Path, Extension};
+use axum::{extract::Path, Extension, Json};
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::{error::AppResult, jwt::Claims};
+use crate::{domain::BanWordFilter, error::AppResult, jwt::Claims, service::BanWordService};
 
 pub async fn handler(
+    Extension(ban_word_service): Extension<Arc<BanWordService>>,
     Extension(claims): Extension<Arc<Claims>>,
     Path(path_params): Path<UpdateBanWordFilterPathParams>,
-) -> AppResult {
-    todo!()
+    Json(request): Json<UpdateBanWordFilterRequest>,
+) -> AppResult<Json<BanWordFilter>> {
+    let filter = ban_word_service
+        .update_filter(&claims.sub, &path_params.ban_word_filter_id, &request.name)
+        .await?;
+
+    Ok(Json(filter))
 }
 
 #[derive(Deserialize)]
 pub struct UpdateBanWordFilterPathParams {
     ban_word_filter_id: Uuid,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateBanWordFilterRequest {
+    name: String,
 }
