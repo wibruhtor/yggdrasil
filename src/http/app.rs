@@ -25,10 +25,16 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
 
     let user_dao = dao::UserDao::new(Arc::clone(&pool));
     let twitch_data_dao = dao::TwitchDataDao::new(Arc::clone(&pool));
-    let token_dao = dao::TokenDao::new(Arc::clone(&pool), Arc::new(crypt));
+    let token_dao = dao::TokenDao::new(Arc::clone(&pool), Arc::clone(&crypt));
 
-    let auth_service =
-        service::AuthService::new(config.twitch, jwt, user_dao, twitch_data_dao, token_dao);
+    let auth_service = service::AuthService::new(
+        Arc::new(config.twitch),
+        Arc::clone(&jwt),
+        Arc::clone(&user_dao),
+        Arc::clone(&twitch_data_dao),
+        Arc::clone(&token_dao),
+    );
+    let session_service = service::SessionService::new(Arc::clone(&token_dao));
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
@@ -39,6 +45,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
         )
         .merge(routes::get().fallback(handler_404))
         .layer(Extension(Arc::new(auth_service)))
+        .layer(Extension(Arc::new(session_service)))
         .layer(middleware::from_fn(logger_middleware))
         .layer(prometheus_layer)
         .layer(middleware::from_fn(request_id_middleware))

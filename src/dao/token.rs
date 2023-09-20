@@ -80,6 +80,34 @@ impl TokenDao {
         })
     }
 
+    pub async fn get_all_by_user_id(&self, user_id: &str) -> AppResult<Vec<Token>> {
+        let span = tracing::debug_span!("get all tokens by user id");
+        let _span = span.enter();
+
+        let recs = sqlx::query!(
+            r#"SELECT id, user_id, user_agent, ip, authorized_at, refreshed_at FROM tokens WHERE user_id = $1"#,
+            user_id,
+        )
+        .fetch_all((*self.pool).as_ref())
+        .await?;
+
+        let mut tokens: Vec<Token> = Vec::new();
+
+        for rec in recs {
+            let decrypted_ip = self.crypt.decrypt_str(&rec.ip)?;
+            tokens.push(Token {
+                id: rec.id,
+                user_id: rec.user_id,
+                user_agent: rec.user_agent,
+                ip: decrypted_ip,
+                authorized_at: rec.authorized_at,
+                refreshed_at: rec.refreshed_at,
+            })
+        }
+
+        Ok(tokens)
+    }
+
     pub async fn refresh(&self, id: &Uuid) -> AppResult<Token> {
         let span = tracing::debug_span!("refresh token");
         let _span = span.enter();
@@ -118,5 +146,40 @@ impl TokenDao {
         } else {
             Ok(())
         }
+    }
+
+    pub async fn delete_with_user_id(&self, id: &Uuid, user_id: &str) -> AppResult {
+        let span = tracing::debug_span!("delete token");
+        let _span = span.enter();
+
+        let rec = sqlx::query!(
+            r#"DELETE FROM tokens WHERE id = $1 AND user_id = $2"#,
+            id,
+            user_id
+        )
+        .execute((*self.pool).as_ref())
+        .await?;
+
+        if rec.rows_affected() == 0 {
+            Err(AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                .message("token not found".to_string()))
+        } else {
+            Ok(())
+        }
+    }
+
+    pub async fn delete_all_by_user_id_exclude_one(&self, user_id: &str, id: &Uuid) -> AppResult {
+        let span = tracing::debug_span!("delete all by user id exclude one");
+        let _span = span.enter();
+
+        sqlx::query!(
+            r#"DELETE FROM tokens WHERE user_id = $1 AND id != $2"#,
+            user_id,
+            id
+        )
+        .execute((*self.pool).as_ref())
+        .await?;
+
+        Ok(())
     }
 }

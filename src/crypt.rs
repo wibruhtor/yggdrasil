@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use magic_crypt::{new_magic_crypt, MagicCrypt256, MagicCryptTrait};
 use reqwest::StatusCode;
 
@@ -10,10 +12,10 @@ pub struct Crypt {
 
 #[allow(dead_code)]
 impl Crypt {
-    pub fn new(secret: &str) -> Self {
-        Crypt {
+    pub fn new(secret: &str) -> Arc<Self> {
+        Arc::new(Crypt {
             cipher: new_magic_crypt!(secret, 256),
-        }
+        })
     }
 
     pub fn encrypt(&self, data: &[u8]) -> Vec<u8> {

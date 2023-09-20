@@ -17,8 +17,8 @@ const GET_USERS_URL: &str = "https://api.twitch.tv/helix/users";
 
 #[allow(dead_code)]
 pub struct AuthService {
-    twitch_config: config::twitch::Twitch,
-    jwt: jwt::Jwt,
+    twitch_config: Arc<config::twitch::Twitch>,
+    jwt: Arc<jwt::Jwt>,
     user_dao: Arc<UserDao>,
     twitch_data_dao: Arc<TwitchDataDao>,
     token_dao: Arc<TokenDao>,
@@ -28,8 +28,8 @@ pub struct AuthService {
 #[allow(dead_code)]
 impl AuthService {
     pub fn new(
-        twitch_config: config::twitch::Twitch,
-        jwt: jwt::Jwt,
+        twitch_config: Arc<config::twitch::Twitch>,
+        jwt: Arc<jwt::Jwt>,
         user_dao: Arc<UserDao>,
         twitch_data_dao: Arc<TwitchDataDao>,
         token_dao: Arc<TokenDao>,

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{Duration, NaiveDateTime};
 use jsonwebtoken::{
     decode, encode, errors::ErrorKind, Algorithm, DecodingKey, EncodingKey, Header, Validation,
@@ -23,15 +25,15 @@ pub struct Jwt {
 
 #[allow(dead_code)]
 impl Jwt {
-    pub fn new(secret: &str) -> Self {
+    pub fn new(secret: &str) -> Arc<Self> {
         let mut validation = Validation::new(Algorithm::HS256);
         validation.set_audience(&[AUDIENCE]);
         validation.set_issuer(&[ISSUER]);
         validation.validate_nbf = true;
-        Jwt {
+        Arc::new(Jwt {
             secret: secret.to_string(),
             validation,
-        }
+        })
     }
 
     pub fn validate(&self, token: &str) -> AppResult<Claims> {

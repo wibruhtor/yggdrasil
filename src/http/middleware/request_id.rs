@@ -1,4 +1,5 @@
 use axum::{http::Request, middleware::Next, response::Response};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::error::AppResult;
@@ -15,6 +16,7 @@ pub async fn request_id_middleware<B>(
         REQUEST_ID_HEADER_NAME,
         request_id.to_string().parse().unwrap(),
     );
+    request.extensions_mut().insert(RequestId(request_id));
 
     let mut response = next.run(request).await;
 
@@ -26,5 +28,5 @@ pub async fn request_id_middleware<B>(
     Ok(response)
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct RequestId(pub Uuid);
