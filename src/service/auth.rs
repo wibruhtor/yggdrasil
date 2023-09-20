@@ -60,9 +60,6 @@ impl AuthService {
         user_agent: &str,
         ip: &str,
     ) -> AppResult<(String, String)> {
-        let span = tracing::debug_span!("exchange code");
-        let _span = span.enter();
-
         // region: Generate params
         let mut params: HashMap<&str, &str> = HashMap::new();
         params.insert("client_id", &self.twitch_config.client_id);
@@ -75,9 +72,7 @@ impl AuthService {
         let client = reqwest::Client::new();
 
         // region: Exchange code
-        span.in_scope(|| {
-            tracing::debug!("send request to twitch for exchange code");
-        });
+        tracing::debug!("send request to twitch for exchange code");
         let resp = client
             .post(TOKEN_URL)
             .form(&params)
@@ -100,9 +95,7 @@ impl AuthService {
         // endregion
 
         // region: Parse exchange code response to json
-        span.in_scope(|| {
-            tracing::debug!("parse response of exchange code");
-        });
+        tracing::debug!("parse response of exchange code");
         let exchange_code_response = resp.json::<ExchangeCodeResponse>().await.map_err(|e| {
             AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
                 .message("fail parse json of exchange code response".to_string())
@@ -111,9 +104,7 @@ impl AuthService {
         // endregion
 
         // region: Get twitch user
-        span.in_scope(|| {
-            tracing::debug!("send request to twitch for get twitch user");
-        });
+        tracing::debug!("send request to twitch for get twitch user");
         let resp = client
             .get(GET_USERS_URL)
             .header(
@@ -140,9 +131,7 @@ impl AuthService {
         // endregion
 
         // region: Parse get twitch user response to json
-        span.in_scope(|| {
-            tracing::debug!("parse response of get twich user");
-        });
+        tracing::debug!("parse response of get twich user");
         let twitch_user_response = resp.json::<TwitchUserResponse>().await.map_err(|e| {
             AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
                 .message("fail parse json of get twitch user response".to_string())
@@ -151,9 +140,7 @@ impl AuthService {
         // endregion
 
         // region: Get twitch user from response
-        span.in_scope(|| {
-            tracing::debug!("get twitch user from response");
-        });
+        tracing::debug!("get twitch user from response");
         let twitch_user = twitch_user_response.data.first().ok_or(
             AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
                 .message("fail get twitch user from response".to_string()),
@@ -161,9 +148,7 @@ impl AuthService {
         // endregion
 
         // region: Get or create user
-        span.in_scope(|| {
-            tracing::debug!("get or create user");
-        });
+        tracing::debug!("get or create user");
         let user = self
             .user_dao
             .get_or_create(&twitch_user.id, &twitch_user.login)
@@ -171,32 +156,24 @@ impl AuthService {
         // endregion
 
         // region: Create or update twitch data
-        span.in_scope(|| {
-            tracing::debug!("create or update twitch data");
-        });
+        tracing::debug!("create or update twitch data");
         self.twitch_data_dao
             .create_or_update(&user.id, &exchange_code_response.refresh_token)
             .await?;
         // endregion
 
         // region: Create token
-        span.in_scope(|| {
-            tracing::debug!("create token");
-        });
+        tracing::debug!("create token");
         let token = self.token_dao.create(&user.id, user_agent, ip).await?;
         // endregion
 
         // region: Create jwt tokens
-        span.in_scope(|| {
-            tracing::debug!("create access token");
-        });
+        tracing::debug!("create access token");
         let access_token = self
             .jwt
             .generate_access_token(&token.id, &user.id, &user.username, &token.refreshed_at)?
             .0;
-        span.in_scope(|| {
-            tracing::debug!("create refresh token");
-        });
+        tracing::debug!("create refresh token");
         let refresh_token = self
             .jwt
             .generate_refresh_token(&token.id, &user.id, &user.username, &token.refreshed_at)?
@@ -207,14 +184,9 @@ impl AuthService {
     }
 
     pub async fn validate_token(&self, token: &str) -> AppResult<Claims> {
-        let span = tracing::debug_span!("validate token");
-        let _span = span.enter();
-
         let claims = self.jwt.validate(token)?;
 
-        span.in_scope(|| {
-            tracing::debug!("get token");
-        });
+        tracing::debug!("get token");
         let token = self.token_dao.get(&claims.jti).await.map_err(|err| {
             err.status_code(StatusCode::FORBIDDEN)
                 .message("invalid token".to_string())
@@ -231,40 +203,27 @@ impl AuthService {
     }
 
     pub async fn delete_token(&self, token_id: &Uuid, token_type: TokenType) -> AppResult {
-        let span = tracing::debug_span!("delete token");
-        let _span = span.enter();
-
+        tracing::debug!("check token type");
         if token_type != TokenType::Access {
             return Err(AppError::new(StatusCode::FORBIDDEN).message("invalid token".to_string()));
         }
 
-        span.in_scope(|| {
-            tracing::debug!("delete token");
-        });
+        tracing::debug!("delete token");
         self.token_dao.delete(token_id).await
     }
 
     pub async fn refresh_token(&self, token: &str) -> AppResult<(String, String)> {
-        let span = tracing::debug_span!("refresh token");
-        let _span = span.enter();
-
-        span.in_scope(|| {
-            tracing::debug!("validate token");
-        });
+        tracing::debug!("validate token");
         let claims = self.validate_token(token).await?;
         let token_type = claims.token_type();
         if token_type.is_none() || token_type.clone().unwrap() != TokenType::Refresh {
             return Err(AppError::new(StatusCode::FORBIDDEN).message("invalid token".to_string()));
         }
 
-        span.in_scope(|| {
-            tracing::debug!("refresh token");
-        });
+        tracing::debug!("refresh token");
         let token = self.token_dao.refresh(&claims.jti).await?;
 
-        span.in_scope(|| {
-            tracing::debug!("create access token");
-        });
+        tracing::debug!("create access token");
         let access_token = self
             .jwt
             .generate_access_token(
@@ -274,9 +233,7 @@ impl AuthService {
                 &token.refreshed_at,
             )?
             .0;
-        span.in_scope(|| {
-            tracing::debug!("create refresh token");
-        });
+        tracing::debug!("create refresh token");
         let refresh_token = self
             .jwt
             .generate_refresh_token(
