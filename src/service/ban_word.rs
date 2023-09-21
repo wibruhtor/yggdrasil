@@ -77,14 +77,7 @@ impl BanWordService {
         Ok(())
     }
 
-    pub async fn get_ban_words(
-        &self,
-        user_id: &str,
-        ban_word_filter_id: &Uuid,
-    ) -> AppResult<Vec<String>> {
-        self.check_user_owning_of_filter_by_filter_id(user_id, ban_word_filter_id)
-            .await?;
-
+    pub async fn get_ban_words(&self, ban_word_filter_id: &Uuid) -> AppResult<Vec<String>> {
         tracing::debug!("get ban words in filter");
         self.ban_word_dao
             .get_all_in_filter(ban_word_filter_id)

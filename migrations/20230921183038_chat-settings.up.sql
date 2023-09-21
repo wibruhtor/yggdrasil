@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS chat_settings (
   hide_message_pattern varchar NOT NULL DEFAULT '!',
   hide_point_rewards boolean NOT NULL DEFAULT false,
   hide_links boolean NOT NULL DEFAULT true,
-  link_replacements varchar NOT NULL DEFAULT '<link>',
+  link_replacement varchar NOT NULL DEFAULT '<link>',
   ban_word_replacement varchar NOT NULL DEFAULT '***',
   ban_word_filter_id uuid NULL DEFAULT NULL,
   font_family varchar NOT NULL DEFAULT '',

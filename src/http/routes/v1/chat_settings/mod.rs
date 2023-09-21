@@ -1,27 +1,13 @@
-use axum::{routing, Json, Router};
+use axum::{middleware, routing, Router};
 
-use crate::domain::{ChatColorSettings, ChatSettings};
+use crate::http::middleware::auth_middleware;
 
 pub fn routes() -> Router {
     Router::new()
-        .route("/", routing::get(handler)) // all
-        .route("/", routing::post(|| async {})) // create
-        .route("/:chat_settings_id", routing::get(|| async {})) // get
-        .route("/:chat_settings_id", routing::put(|| async {})) // update
-        .route("/:chat_settings_id", routing::delete(|| async {})) // delete
-}
-
-async fn handler() -> Json<ChatSettings> {
-    Json(ChatSettings {
-        id: uuid::Uuid::new_v4(),
-        name: "default".to_string(),
-        chat_type: crate::domain::ChatType::Block,
-        color: ChatColorSettings {
-            nickname_color: 3941000703,
-            background_color: 303239167,
-            text_color: 3941000703,
-            gradient_only_for_custom_nicknames: true,
-        },
-        user_id: "53465346".to_string(),
-    })
+        .route("/", routing::get(|| async {}))
+        .route("/", routing::post(|| async {}))
+        .route("/:chat_settings_id", routing::put(|| async {}))
+        .route("/:chat_settings_id", routing::delete(|| async {}))
+        .layer(middleware::from_fn(auth_middleware))
+        .route("/:chat_settings_id", routing::get(|| async {}))
 }
