@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, name, user_id FROM ban_word_filters WHERE id = $1 AND user_id = $2",
+  "query": "SELECT id, name, user_id FROM ban_word_filters WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -21,8 +21,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -31,5 +30,5 @@
       false
     ]
   },
-  "hash": "95cc509a7d2befd7061cd2e70e31b93e37eca0700fc7e8c4859858d7c8732231"
+  "hash": "493db849459813d95c3fc3cfc4f8e16bf8754ed1d46cac1dc37755589a69dee9"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE ban_word_filters SET name = $1 WHERE id = $2 AND user_id = $3 RETURNING id, name, user_id",
+  "query": "UPDATE ban_word_filters SET name = $1 WHERE id = $2 RETURNING id, name, user_id",
   "describe": {
     "columns": [
       {
@@ -22,8 +22,7 @@
     "parameters": {
       "Left": [
         "Varchar",
-        "Uuid",
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -32,5 +31,5 @@
       false
     ]
   },
-  "hash": "833c09a714eec35e78a4f6aa91f87b6fedbc524af9a66ff12f43b49a2ee1ef1f"
+  "hash": "66ef789b6ba751904d309e017e33935ad2b7eec529d7e5fe800f808f1f8e3132"
 }

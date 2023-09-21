@@ -21,6 +21,26 @@ impl BanWordFilterDao {
         Arc::new(BanWordFilterDao { pool })
     }
 
+    pub async fn is_belongs_to_user(&self, id: &Uuid, user_id: &str) -> AppResult<bool> {
+        let span = tracing::debug_span!("check user owning of ban word filter");
+
+        let rec = sqlx::query!(
+            r#"SELECT count(id) FROM ban_word_filters WHERE id = $1 AND user_id = $2"#,
+            id,
+            user_id,
+        )
+        .fetch_one((*self.pool).as_ref())
+        .instrument(span)
+        .await?;
+
+        let is_belongs_to_user = match rec.count {
+            Some(count) => count > 0,
+            None => false,
+        };
+
+        Ok(is_belongs_to_user)
+    }
+
     pub async fn create(&self, user_id: &str, name: &str) -> AppResult<BanWordFilter> {
         let span = tracing::debug_span!("create ban word filter");
 
@@ -47,14 +67,13 @@ impl BanWordFilterDao {
         })
     }
 
-    pub async fn update(&self, id: &Uuid, user_id: &str, name: &str) -> AppResult<BanWordFilter> {
+    pub async fn update(&self, id: &Uuid, name: &str) -> AppResult<BanWordFilter> {
         let span = tracing::debug_span!("update ban word filter");
 
         let rec = sqlx::query!(
-            r#"UPDATE ban_word_filters SET name = $1 WHERE id = $2 AND user_id = $3 RETURNING id, name, user_id"#,
+            r#"UPDATE ban_word_filters SET name = $1 WHERE id = $2 RETURNING id, name, user_id"#,
             name,
             id,
-            user_id,
         )
         .fetch_one((*self.pool).as_ref())
         .instrument(span)
@@ -67,13 +86,12 @@ impl BanWordFilterDao {
         })
     }
 
-    pub async fn get(&self, id: &Uuid, user_id: &str) -> AppResult<BanWordFilter> {
-        let span = tracing::debug_span!("get ban word filter by id and user id");
+    pub async fn get(&self, id: &Uuid) -> AppResult<BanWordFilter> {
+        let span = tracing::debug_span!("get ban word filter by id");
 
         let rec = sqlx::query!(
-            r#"SELECT id, name, user_id FROM ban_word_filters WHERE id = $1 AND user_id = $2"#,
+            r#"SELECT id, name, user_id FROM ban_word_filters WHERE id = $1"#,
             id,
-            user_id,
         )
         .fetch_one((*self.pool).as_ref())
         .instrument(span)
@@ -110,17 +128,13 @@ impl BanWordFilterDao {
         Ok(filters)
     }
 
-    pub async fn delete(&self, id: &Uuid, user_id: &str) -> AppResult {
+    pub async fn delete(&self, id: &Uuid) -> AppResult {
         let span = tracing::debug_span!("delete ban word filter");
 
-        let rec = sqlx::query!(
-            r#"DELETE FROM ban_word_filters WHERE id = $1 AND user_id = $2"#,
-            id,
-            user_id
-        )
-        .execute((*self.pool).as_ref())
-        .instrument(span)
-        .await?;
+        let rec = sqlx::query!(r#"DELETE FROM ban_word_filters WHERE id = $1"#, id,)
+            .execute((*self.pool).as_ref())
+            .instrument(span)
+            .await?;
 
         if rec.rows_affected() == 0 {
             Err(AppError::new(StatusCode::INTERNAL_SERVER_ERROR)

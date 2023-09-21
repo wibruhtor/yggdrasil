@@ -6,7 +6,7 @@ use serde::Serialize;
 use crate::service::AuthService;
 
 pub async fn handler(Extension(auth_service): Extension<Arc<AuthService>>) -> Json<LoginResponse> {
-    let url = auth_service.authorize_url();
+    let url = auth_service.get_authorize_url();
 
     Json(LoginResponse { url })
 }

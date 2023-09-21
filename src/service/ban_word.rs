@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
+use axum::http::StatusCode;
 use uuid::Uuid;
 
 use crate::{
     dao::{BanWordDao, BanWordFilterDao},
     domain::BanWordFilter,
-    error::AppResult,
+    error::{AppError, AppResult},
 };
 
 #[allow(dead_code)]
@@ -34,9 +35,12 @@ impl BanWordService {
         ban_word_filter_id: &Uuid,
         name: &str,
     ) -> AppResult<BanWordFilter> {
+        self.check_user_owning_of_filter_by_filter_id(user_id, ban_word_filter_id)
+            .await?;
+
         tracing::debug!("update ban word filter");
         self.ban_word_filter_dao
-            .update(ban_word_filter_id, user_id, name)
+            .update(ban_word_filter_id, name)
             .await
     }
 
@@ -51,23 +55,24 @@ impl BanWordService {
         ban_word_filter_id: &Uuid,
     ) -> AppResult<(BanWordFilter, Vec<String>)> {
         tracing::debug!("get ban word filter");
-        let filter = self
-            .ban_word_filter_dao
-            .get(ban_word_filter_id, user_id)
-            .await?;
+        let filter = self.ban_word_filter_dao.get(ban_word_filter_id).await?;
+
+        self.check_user_owning_of_filter(user_id, &filter).await?;
+
         let words = self
             .ban_word_dao
-            .get_all_in_filter_by_user_id(ban_word_filter_id, user_id)
+            .get_all_in_filter(ban_word_filter_id)
             .await?;
 
         Ok((filter, words))
     }
 
     pub async fn delete_filter(&self, user_id: &str, ban_word_filter_id: &Uuid) -> AppResult {
-        tracing::debug!("delete ban word filter");
-        self.ban_word_filter_dao
-            .delete(ban_word_filter_id, user_id)
+        self.check_user_owning_of_filter_by_filter_id(user_id, ban_word_filter_id)
             .await?;
+
+        tracing::debug!("delete ban word filter");
+        self.ban_word_filter_dao.delete(ban_word_filter_id).await?;
 
         Ok(())
     }
@@ -77,9 +82,12 @@ impl BanWordService {
         user_id: &str,
         ban_word_filter_id: &Uuid,
     ) -> AppResult<Vec<String>> {
+        self.check_user_owning_of_filter_by_filter_id(user_id, ban_word_filter_id)
+            .await?;
+
         tracing::debug!("get ban words in filter");
         self.ban_word_dao
-            .get_all_in_filter_by_user_id(ban_word_filter_id, user_id)
+            .get_all_in_filter(ban_word_filter_id)
             .await
     }
 
@@ -89,8 +97,14 @@ impl BanWordService {
         ban_word_filter_id: &Uuid,
         ban_words: &Vec<String>,
     ) -> AppResult {
+        self.check_user_owning_of_filter_by_filter_id(user_id, ban_word_filter_id)
+            .await?;
+
         tracing::debug!("get ban words in filter");
-        let previous_ban_words = self.get_ban_words(user_id, ban_word_filter_id).await?;
+        let previous_ban_words = self
+            .ban_word_dao
+            .get_all_in_filter(ban_word_filter_id)
+            .await?;
 
         tracing::debug!("compute to create ban words");
         let mut to_create_ban_words: Vec<String> = Vec::new();
@@ -110,11 +124,43 @@ impl BanWordService {
 
         tracing::debug!("update ban words");
         self.ban_word_dao
-            .update_in_filter_by_user_id(
+            .update_in_filter(
                 ban_word_filter_id,
                 &to_create_ban_words,
                 &to_delete_ban_words,
             )
             .await
+    }
+
+    async fn check_user_owning_of_filter_by_filter_id(
+        &self,
+        user_id: &str,
+        ban_word_filter_id: &Uuid,
+    ) -> AppResult {
+        tracing::debug!("check user ownings of ban word filter");
+        let is_owner = self
+            .ban_word_filter_dao
+            .is_belongs_to_user(ban_word_filter_id, user_id)
+            .await?;
+
+        if !is_owner {
+            return Err(AppError::new(StatusCode::UNAUTHORIZED)
+                .message("ban word filter is not your".to_string()));
+        }
+
+        Ok(())
+    }
+
+    async fn check_user_owning_of_filter(
+        &self,
+        user_id: &str,
+        ban_word_filter: &BanWordFilter,
+    ) -> AppResult {
+        tracing::debug!("check user ownings of ban word filter");
+        if ban_word_filter.user_id != user_id {
+            return Err(AppError::new(StatusCode::UNAUTHORIZED)
+                .message("ban word filter is not your".to_string()));
+        }
+        Ok(())
     }
 }

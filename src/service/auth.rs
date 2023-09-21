@@ -8,7 +8,7 @@ use crate::{
     config,
     dao::{TokenDao, TwitchDataDao, UserDao},
     error::{AppError, AppResult},
-    jwt::{self, Claims, TokenType},
+    jwt::{self, Claims},
 };
 
 const AUTHORIZE_URL: &str = "https://id.twitch.tv/oauth2/authorize";
@@ -44,7 +44,8 @@ impl AuthService {
         }
     }
 
-    pub fn authorize_url(&self) -> String {
+    /// Get authorize url of twitch oauth2
+    pub fn get_authorize_url(&self) -> String {
         format!(
             "{}?client_id={}&force_verify=true&redirect_uri={}&response_type=code&scope={}",
             AUTHORIZE_URL,
@@ -54,6 +55,7 @@ impl AuthService {
         )
     }
 
+    // Exchange twitch oauth2 code to access and refresh tokens
     pub async fn exchange_code(
         &self,
         code: &str,
@@ -61,6 +63,7 @@ impl AuthService {
         ip: &str,
     ) -> AppResult<(String, String)> {
         // region: Generate params
+        tracing::debug!("generate params");
         let mut params: HashMap<&str, &str> = HashMap::new();
         params.insert("client_id", &self.twitch_config.client_id);
         params.insert("client_secret", &self.twitch_config.client_secret);
@@ -84,6 +87,7 @@ impl AuthService {
                     .cause(e.into())
             })?;
 
+        tracing::debug!("check status of response after request to twitch for exchange code");
         if resp.status() != StatusCode::OK {
             return Err(
                 AppError::new(StatusCode::INTERNAL_SERVER_ERROR).message(format!(
@@ -120,6 +124,7 @@ impl AuthService {
                     .cause(e.into())
             })?;
 
+        tracing::debug!("check status of response after request to twitch for get twitch user");
         if resp.status() != StatusCode::OK {
             return Err(
                 AppError::new(StatusCode::INTERNAL_SERVER_ERROR).message(format!(
@@ -183,6 +188,7 @@ impl AuthService {
         Ok((access_token, refresh_token))
     }
 
+    /// validate jwt token without check type of it
     pub async fn validate_token(&self, token: &str) -> AppResult<Claims> {
         let claims = self.jwt.validate(token)?;
 
@@ -202,24 +208,13 @@ impl AuthService {
         }
     }
 
-    pub async fn delete_token(&self, token_id: &Uuid, token_type: TokenType) -> AppResult {
-        tracing::debug!("check token type");
-        if token_type != TokenType::Access {
-            return Err(AppError::new(StatusCode::FORBIDDEN).message("invalid token".to_string()));
-        }
-
-        tracing::debug!("delete token");
+    /// Revoke token from database
+    pub async fn revoke_token(&self, token_id: &Uuid) -> AppResult {
         self.token_dao.delete(token_id).await
     }
 
-    pub async fn refresh_token(&self, token: &str) -> AppResult<(String, String)> {
-        tracing::debug!("validate token");
-        let claims = self.validate_token(token).await?;
-        let token_type = claims.token_type();
-        if token_type.is_none() || token_type.clone().unwrap() != TokenType::Refresh {
-            return Err(AppError::new(StatusCode::FORBIDDEN).message("invalid token".to_string()));
-        }
-
+    /// Refresh tokens by refresh token, returns accesss and refresh tokens
+    pub async fn refresh_token(&self, claims: &Claims) -> AppResult<(String, String)> {
         tracing::debug!("refresh token");
         let token = self.token_dao.refresh(&claims.jti).await?;
 

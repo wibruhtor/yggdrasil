@@ -3,13 +3,17 @@ use std::sync::Arc;
 use axum::{
     extract::TypedHeader,
     headers::authorization::{Authorization, Bearer},
-    http::Request,
+    http::{Request, StatusCode},
     middleware::Next,
     response::Response,
     Extension,
 };
 
-use crate::{error::AppResult, service::AuthService};
+use crate::{
+    error::{AppError, AppResult},
+    jwt::TokenType,
+    service::AuthService,
+};
 
 pub async fn auth_middleware<B>(
     TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
@@ -19,6 +23,9 @@ pub async fn auth_middleware<B>(
 ) -> AppResult<Response> {
     let token = auth.token();
     let claims = auth_service.validate_token(token).await?;
+    if claims.token_type().is_none() || claims.token_type().unwrap() != TokenType::Access {
+        return Err(AppError::new(StatusCode::FORBIDDEN).message("invalid token type".to_string()));
+    }
     request.extensions_mut().insert(Arc::new(claims));
     Ok(next.run(request).await)
 }

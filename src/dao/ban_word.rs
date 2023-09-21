@@ -17,17 +17,12 @@ impl BanWordDao {
         Arc::new(BanWordDao { pool })
     }
 
-    pub async fn get_all_in_filter_by_user_id(
-        &self,
-        ban_word_filter_id: &Uuid,
-        user_id: &str,
-    ) -> AppResult<Vec<String>> {
-        let span = tracing::debug_span!("get all ban words in filter by user id");
+    pub async fn get_all_in_filter(&self, ban_word_filter_id: &Uuid) -> AppResult<Vec<String>> {
+        let span = tracing::debug_span!("get all ban words in filter");
 
         let recs = sqlx::query!(
-            r#"SELECT ban_words.word FROM ban_words INNER JOIN ban_word_filters ON ban_word_filters.id = ban_words.ban_word_filter_id WHERE ban_words.ban_word_filter_id = $1 AND ban_word_filters.user_id = $2"#,
+            r#"SELECT ban_words.word FROM ban_words WHERE ban_word_filter_id = $1"#,
             ban_word_filter_id,
-            user_id
         )
         .fetch_all((*self.pool).as_ref())
         .instrument(span)
@@ -42,13 +37,13 @@ impl BanWordDao {
         Ok(words)
     }
 
-    pub async fn update_in_filter_by_user_id(
+    pub async fn update_in_filter(
         &self,
         ban_word_filter_id: &Uuid,
         to_create_ban_words: &Vec<String>,
         to_delete_ban_words: &Vec<String>,
     ) -> AppResult {
-        let span = tracing::debug_span!("update all ban words in filter by user id");
+        let span = tracing::debug_span!("update all ban words in filter");
 
         let mut tx = self.pool.begin().instrument(span.clone()).await?;
 
