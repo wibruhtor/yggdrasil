@@ -14,8 +14,6 @@ const AUDIENCE: &str = "wibruhtor";
 const ISSUER: &str = "api.wibruhtor.ru";
 const ACCESS_TOKEN_TTL_IN_HOURS: i64 = 1;
 const REFRESH_TOKEN_TTL_IN_DAYS: i64 = 365;
-const ACCESS_TOKEN: &str = "access_token";
-const REFRESH_TOKEN: &str = "refresh_token";
 
 #[allow(dead_code)]
 pub struct Jwt {
@@ -68,7 +66,7 @@ impl Jwt {
         time: &NaiveDateTime,
     ) -> AppResult<(String, Claims)> {
         let duration = Duration::hours(ACCESS_TOKEN_TTL_IN_HOURS);
-        self.generate_token(id, user_id, username, ACCESS_TOKEN, &duration, time)
+        self.generate_token(id, user_id, username, TokenType::Access, &duration, time)
     }
 
     pub fn generate_refresh_token(
@@ -79,7 +77,7 @@ impl Jwt {
         time: &NaiveDateTime,
     ) -> AppResult<(String, Claims)> {
         let duration = Duration::days(REFRESH_TOKEN_TTL_IN_DAYS);
-        self.generate_token(id, user_id, username, REFRESH_TOKEN, &duration, time)
+        self.generate_token(id, user_id, username, TokenType::Refresh, &duration, time)
     }
 
     fn generate_token(
@@ -87,14 +85,14 @@ impl Jwt {
         id: &Uuid,
         user_id: &str,
         username: &str,
-        token_type: &str,
+        token_type: TokenType,
         token_ttl: &Duration,
         time: &NaiveDateTime,
     ) -> AppResult<(String, Claims)> {
         let timestamp = time.timestamp();
         let claims = Claims {
             jti: id.to_owned(),
-            typ: token_type.to_string(),
+            typ: token_type,
             aud: AUDIENCE.to_string(),
             exp: timestamp + token_ttl.num_seconds(),
             iat: timestamp,
@@ -117,7 +115,7 @@ impl Jwt {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub jti: Uuid,        // Token id
-    pub typ: String,      // Type of token. access_token or refresh_token
+    pub typ: TokenType,   // Type of token. access_token or refresh_token
     pub aud: String,      // Audience
     pub exp: i64,         // Expiration time (as UTC timestamp)
     pub iat: i64,         // Issued at (as UTC timestamp)
@@ -127,29 +125,10 @@ pub struct Claims {
     pub username: String, // Username
 }
 
-impl Claims {
-    pub fn token_type(&self) -> Option<TokenType> {
-        if self.typ == ACCESS_TOKEN {
-            Some(TokenType::Access)
-        } else if self.typ == REFRESH_TOKEN {
-            Some(TokenType::Refresh)
-        } else {
-            None
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum TokenType {
+    #[serde(rename = "access_token")]
     Access,
+    #[serde(rename = "refresh_token")]
     Refresh,
-}
-
-impl ToString for TokenType {
-    fn to_string(&self) -> String {
-        match self {
-            TokenType::Access => ACCESS_TOKEN.to_string(),
-            TokenType::Refresh => REFRESH_TOKEN.to_string(),
-        }
-    }
 }

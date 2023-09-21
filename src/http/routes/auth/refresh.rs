@@ -21,8 +21,7 @@ pub async fn handler(
         .map_err(|e| ValidationErrorsWrapper::from(e))?;
 
     let refresh_token_claims = auth_service.validate_token(&request.token).await?;
-    let token_type = refresh_token_claims.token_type();
-    if token_type.is_none() || token_type.unwrap() != TokenType::Refresh {
+    if refresh_token_claims.typ != TokenType::Refresh {
         return Err(
             AppError::new(StatusCode::BAD_REQUEST).message("invalid refresh token".to_string())
         );

@@ -23,7 +23,7 @@ pub async fn auth_middleware<B>(
 ) -> AppResult<Response> {
     let token = auth.token();
     let claims = auth_service.validate_token(token).await?;
-    if claims.token_type().is_none() || claims.token_type().unwrap() != TokenType::Access {
+    if claims.typ != TokenType::Access {
         return Err(AppError::new(StatusCode::FORBIDDEN).message("invalid token type".to_string()));
     }
     request.extensions_mut().insert(Arc::new(claims));

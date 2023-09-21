@@ -1,6 +1,6 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Serialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct TwitchData {
     #[serde(rename = "userId")]
     pub user_id: String,
