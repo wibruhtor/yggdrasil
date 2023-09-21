@@ -25,5 +25,6 @@ pub struct GetBanWordsPathParams {
 
 #[derive(Serialize)]
 pub struct GetBanWordsResponse {
+    #[serde(rename = "banWords")]
     ban_words: Vec<String>,
 }

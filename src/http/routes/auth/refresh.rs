@@ -3,9 +3,10 @@ use std::sync::Arc;
 use axum::{Extension, Json};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
 use crate::{
-    error::{AppError, AppResult},
+    error::{AppError, AppResult, ValidationErrorsWrapper},
     jwt::{Claims, TokenType},
     service::AuthService,
 };
@@ -15,6 +16,10 @@ pub async fn handler(
     Extension(claims): Extension<Arc<Claims>>,
     Json(request): Json<RefreshRequest>,
 ) -> AppResult<Json<RefreshResponse>> {
+    request
+        .validate()
+        .map_err(|e| ValidationErrorsWrapper::from(e))?;
+
     let refresh_token_claims = auth_service.validate_token(&request.token).await?;
     let token_type = refresh_token_claims.token_type();
     if token_type.is_none() || token_type.unwrap() != TokenType::Refresh {
@@ -31,13 +36,16 @@ pub async fn handler(
     }))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct RefreshRequest {
+    #[validate(length(min = 1))]
     token: String,
 }
 
 #[derive(Debug, Serialize)]
 pub struct RefreshResponse {
+    #[serde(rename = "accessToken")]
     access_token: String,
+    #[serde(rename = "refreshToken")]
     refresh_token: String,
 }

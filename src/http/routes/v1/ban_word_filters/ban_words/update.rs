@@ -30,5 +30,6 @@ pub struct UpdateBanWordsPathParams {
 
 #[derive(Deserialize)]
 pub struct UpdateBanWordsRequest {
+    #[serde(rename = "banWords")]
     ban_words: Vec<String>,
 }
