@@ -8,6 +8,7 @@ use axum::{
     response::Response,
     TypedHeader,
 };
+use tracing::Instrument;
 
 use crate::error::AppResult;
 
@@ -49,9 +50,8 @@ pub async fn logger_middleware<B>(
         user_agent,
         ip = socket.ip().to_string()
     );
-    let _span = span.enter();
 
-    let response = next.run(request).await;
+    let response = next.run(request).instrument(span).await;
 
     let latency = now.elapsed().as_micros();
     let status_code = response.status().as_u16();

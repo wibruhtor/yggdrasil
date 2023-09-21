@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use sqlx::{Pool, Postgres};
+use tracing::Instrument;
 use uuid::Uuid;
 
 use crate::error::AppResult;
@@ -22,7 +23,6 @@ impl BanWordDao {
         user_id: &str,
     ) -> AppResult<Vec<String>> {
         let span = tracing::debug_span!("get all ban words in filter by user id");
-        let _span = span.enter();
 
         let recs = sqlx::query!(
             r#"SELECT ban_words.word FROM ban_words INNER JOIN ban_word_filters ON ban_word_filters.id = ban_words.ban_word_filter_id WHERE ban_words.ban_word_filter_id = $1 AND ban_word_filters.user_id = $2"#,
@@ -30,6 +30,7 @@ impl BanWordDao {
             user_id
         )
         .fetch_all((*self.pool).as_ref())
+        .instrument(span)
         .await?;
 
         let mut words: Vec<String> = Vec::new();
@@ -47,7 +48,9 @@ impl BanWordDao {
         to_create_ban_words: &Vec<String>,
         to_delete_ban_words: &Vec<String>,
     ) -> AppResult {
-        let mut tx = self.pool.begin().await?;
+        let span = tracing::debug_span!("update all ban words in filter by user id");
+
+        let mut tx = self.pool.begin().instrument(span.clone()).await?;
 
         let ban_word_filter_ids: Vec<Uuid> = to_create_ban_words
             .iter()
@@ -59,6 +62,7 @@ impl BanWordDao {
             to_create_ban_words
         )
         .execute(&mut *tx)
+        .instrument(span.clone())
         .await?;
 
         sqlx::query!(
@@ -67,9 +71,10 @@ impl BanWordDao {
             to_delete_ban_words
         )
         .execute(&mut *tx)
+        .instrument(span.clone())
         .await?;
 
-        tx.commit().await?;
+        tx.commit().instrument(span).await?;
 
         Ok(())
     }

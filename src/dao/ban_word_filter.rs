@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::http::StatusCode;
 use sqlx::{Pool, Postgres};
+use tracing::Instrument;
 use uuid::Uuid;
 
 use crate::{
@@ -22,7 +23,6 @@ impl BanWordFilterDao {
 
     pub async fn create(&self, user_id: &str, name: &str) -> AppResult<BanWordFilter> {
         let span = tracing::debug_span!("create ban word filter");
-        let _span = span.enter();
 
         let rec = sqlx::query!(
             r#"INSERT INTO ban_word_filters (id, name, user_id) VALUES ($1, $2, $3) RETURNING id, name, user_id"#,
@@ -31,6 +31,7 @@ impl BanWordFilterDao {
             user_id,
         )
         .fetch_one((*self.pool).as_ref())
+        .instrument(span)
         .await
         .map_err(|e| match e {
             sqlx::Error::Database(dbe) if dbe.constraint() == Some("ban_word_filters_id_key") => {
@@ -48,7 +49,6 @@ impl BanWordFilterDao {
 
     pub async fn update(&self, id: &Uuid, user_id: &str, name: &str) -> AppResult<BanWordFilter> {
         let span = tracing::debug_span!("update ban word filter");
-        let _span = span.enter();
 
         let rec = sqlx::query!(
             r#"UPDATE ban_word_filters SET name = $1 WHERE id = $2 AND user_id = $3 RETURNING id, name, user_id"#,
@@ -57,6 +57,7 @@ impl BanWordFilterDao {
             user_id,
         )
         .fetch_one((*self.pool).as_ref())
+        .instrument(span)
         .await?;
 
         Ok(BanWordFilter {
@@ -68,7 +69,6 @@ impl BanWordFilterDao {
 
     pub async fn get(&self, id: &Uuid, user_id: &str) -> AppResult<BanWordFilter> {
         let span = tracing::debug_span!("get ban word filter by id and user id");
-        let _span = span.enter();
 
         let rec = sqlx::query!(
             r#"SELECT id, name, user_id FROM ban_word_filters WHERE id = $1 AND user_id = $2"#,
@@ -76,6 +76,7 @@ impl BanWordFilterDao {
             user_id,
         )
         .fetch_one((*self.pool).as_ref())
+        .instrument(span)
         .await?;
 
         Ok(BanWordFilter {
@@ -87,13 +88,13 @@ impl BanWordFilterDao {
 
     pub async fn get_all_by_user_id(&self, user_id: &str) -> AppResult<Vec<BanWordFilter>> {
         let span = tracing::debug_span!("get all ban word filters by user id");
-        let _span = span.enter();
 
         let recs = sqlx::query!(
             r#"SELECT id, name, user_id FROM ban_word_filters WHERE user_id = $1"#,
             user_id,
         )
         .fetch_all((*self.pool).as_ref())
+        .instrument(span)
         .await?;
 
         let mut filters: Vec<BanWordFilter> = Vec::new();
@@ -111,7 +112,6 @@ impl BanWordFilterDao {
 
     pub async fn delete(&self, id: &Uuid, user_id: &str) -> AppResult {
         let span = tracing::debug_span!("delete ban word filter");
-        let _span = span.enter();
 
         let rec = sqlx::query!(
             r#"DELETE FROM ban_word_filters WHERE id = $1 AND user_id = $2"#,
@@ -119,6 +119,7 @@ impl BanWordFilterDao {
             user_id
         )
         .execute((*self.pool).as_ref())
+        .instrument(span)
         .await?;
 
         if rec.rows_affected() == 0 {
