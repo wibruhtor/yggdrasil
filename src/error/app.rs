@@ -4,7 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use serde_json::json;
+use serde_json::{json, Map, Value};
 
 pub type AppResult<T = ()> = Result<T, AppError>;
 
@@ -13,6 +13,7 @@ pub struct AppError {
     pub status_code: StatusCode,
     pub message: Option<String>,
     pub cause: Option<Error>,
+    pub other: Map<String, Value>,
 }
 
 #[allow(dead_code)]
@@ -22,6 +23,7 @@ impl AppError {
             status_code,
             message: None,
             cause: None,
+            other: Map::new(),
         }
     }
 
@@ -49,6 +51,18 @@ impl AppError {
         self.cause = None;
         self
     }
+
+    pub fn other(mut self, field: String, value: Value) -> Self {
+        self.other.insert(field, value);
+        self
+    }
+
+    pub fn other_map(mut self, map: Map<String, Value>) -> Self {
+        for (key, value) in map {
+            self.other.insert(key, value);
+        }
+        self
+    }
 }
 
 impl IntoResponse for AppError {
@@ -69,13 +83,17 @@ impl IntoResponse for AppError {
             }
         }
 
-        (
-            self.status_code,
-            Json(json!({
-                "message": self.message.unwrap_or("unexpected error".to_owned())
+        let json = match self.other.is_empty() {
+            true => Json(json!({
+                "message": self.message.unwrap_or("unexpected error".to_owned()),
             })),
-        )
-            .into_response()
+            false => Json(json!({
+                "message": self.message.unwrap_or("unexpected error".to_owned()),
+                "other": self.other,
+            })),
+        };
+
+        (self.status_code, json).into_response()
     }
 }
 
@@ -84,10 +102,6 @@ where
     E: Into<anyhow::Error>,
 {
     fn from(err: E) -> Self {
-        AppError {
-            status_code: StatusCode::INTERNAL_SERVER_ERROR,
-            message: None,
-            cause: Some(err.into()),
-        }
+        AppError::new(StatusCode::INTERNAL_SERVER_ERROR).cause(err.into())
     }
 }
