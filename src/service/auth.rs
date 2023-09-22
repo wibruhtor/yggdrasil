@@ -15,7 +15,6 @@ const AUTHORIZE_URL: &str = "https://id.twitch.tv/oauth2/authorize";
 const TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
 const GET_USERS_URL: &str = "https://api.twitch.tv/helix/users";
 
-#[allow(dead_code)]
 pub struct AuthService {
     twitch_config: Arc<config::twitch::Twitch>,
     jwt: Arc<jwt::Jwt>,
@@ -25,7 +24,6 @@ pub struct AuthService {
     scope: Vec<String>,
 }
 
-#[allow(dead_code)]
 impl AuthService {
     pub fn new(
         twitch_config: Arc<config::twitch::Twitch>,

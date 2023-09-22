@@ -15,7 +15,6 @@ const ISSUER: &str = "api.wibruhtor.ru";
 const ACCESS_TOKEN_TTL_IN_HOURS: i64 = 1;
 const REFRESH_TOKEN_TTL_IN_DAYS: i64 = 365;
 
-#[allow(dead_code)]
 pub struct Jwt {
     secret: String,
     validation: Validation,

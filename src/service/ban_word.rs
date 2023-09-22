@@ -9,13 +9,11 @@ use crate::{
     error::{AppError, AppResult},
 };
 
-#[allow(dead_code)]
 pub struct BanWordService {
     ban_word_filter_dao: Arc<BanWordFilterDao>,
     ban_word_dao: Arc<BanWordDao>,
 }
 
-#[allow(dead_code)]
 impl BanWordService {
     pub fn new(ban_word_filter_dao: Arc<BanWordFilterDao>, ban_word_dao: Arc<BanWordDao>) -> Self {
         BanWordService {

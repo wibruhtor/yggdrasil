@@ -9,12 +9,10 @@ use crate::{
     error::{AppError, AppResult},
 };
 
-#[allow(dead_code)]
 pub struct TwitchDataDao {
     pool: Arc<Box<Pool<Postgres>>>,
 }
 
-#[allow(dead_code)]
 impl TwitchDataDao {
     pub fn new(pool: Arc<Box<Pool<Postgres>>>) -> Arc<Self> {
         Arc::new(TwitchDataDao { pool })

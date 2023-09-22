@@ -5,7 +5,6 @@ use magic_crypt::{new_magic_crypt, MagicCrypt256, MagicCryptTrait};
 
 use crate::error::{AppError, AppResult};
 
-#[allow(dead_code)]
 pub struct Crypt {
     cipher: MagicCrypt256,
 }

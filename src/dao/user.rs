@@ -9,12 +9,10 @@ use crate::{
     error::{AppError, AppResult},
 };
 
-#[allow(dead_code)]
 pub struct UserDao {
     pool: Arc<Box<Pool<Postgres>>>,
 }
 
-#[allow(dead_code)]
 impl UserDao {
     pub fn new(pool: Arc<Box<Pool<Postgres>>>) -> Arc<Self> {
         Arc::new(UserDao { pool })

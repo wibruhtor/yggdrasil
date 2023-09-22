@@ -6,7 +6,6 @@ use axum::{
 };
 use serde_json::json;
 
-#[allow(dead_code)]
 pub type AppResult<T = ()> = Result<T, AppError>;
 
 #[derive(Debug)]

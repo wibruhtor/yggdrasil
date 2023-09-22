@@ -12,13 +12,11 @@ use crate::{
     error::{AppError, AppResult},
 };
 
-#[allow(dead_code)]
 pub struct TokenDao {
     pool: Arc<Box<Pool<Postgres>>>,
     crypt: Arc<Crypt>,
 }
 
-#[allow(dead_code)]
 impl TokenDao {
     pub fn new(pool: Arc<Box<Pool<Postgres>>>, crypt: Arc<Crypt>) -> Arc<Self> {
         Arc::new(TokenDao { pool, crypt })
