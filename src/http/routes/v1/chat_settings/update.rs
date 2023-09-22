@@ -6,32 +6,30 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
-    domain::{BanWordFilter, ChatSettings, ChatType},
+    domain::{ChatSettings, UpdateChatSettings},
     error::{AppResult, ValidationErrorsWrapper},
     jwt::Claims,
+    service::ChatService,
 };
 
 pub async fn handler(
+    Extension(chat_service): Extension<Arc<ChatService>>,
     Extension(claims): Extension<Arc<Claims>>,
     Path(path_params): Path<UpdateChatSettingsPathParams>,
-    Json(request): Json<UpdateChatSettingsRequest>,
+    Json(request): Json<UpdateChatSettings>,
 ) -> AppResult<Json<ChatSettings>> {
     request
         .validate()
         .map_err(|e| ValidationErrorsWrapper::from(e))?;
 
-    todo!()
+    let filter = chat_service
+        .update_chat_settings(&claims.sub, &path_params.chat_settings_id, &request)
+        .await?;
+
+    Ok(Json(filter))
 }
 
 #[derive(Deserialize)]
 pub struct UpdateChatSettingsPathParams {
     chat_settings_id: Uuid,
-}
-
-#[derive(Deserialize, Validate)]
-pub struct UpdateChatSettingsRequest {
-    #[validate(length(min = 2, max = 32))]
-    name: String,
-    #[serde(rename = "chatType")]
-    chat_type: ChatType,
 }

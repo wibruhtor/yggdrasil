@@ -38,6 +38,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let session_service = service::SessionService::new(Arc::clone(&token_dao));
     let ban_word_service =
         service::BanWordService::new(Arc::clone(&ban_word_filter_dao), Arc::clone(&ban_word_dao));
+    let chat_service = service::ChatService::new();
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
@@ -50,6 +51,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
         .layer(Extension(Arc::new(auth_service)))
         .layer(Extension(Arc::new(session_service)))
         .layer(Extension(Arc::new(ban_word_service)))
+        .layer(Extension(Arc::new(chat_service)))
         .layer(middleware::from_fn(logger_middleware))
         .layer(prometheus_layer)
         .layer(middleware::from_fn(request_id_middleware))

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use validator::Validate;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ChatSettings {
@@ -90,5 +91,75 @@ pub struct ChatFontSettings {
     #[serde(rename = "textFontWeight")]
     pub text_font_weight: i32,
     #[serde(rename = "fontSize")]
+    pub font_size: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Validate)]
+pub struct UpdateChatSettings {
+    #[validate(length(min = 2, max = 32))]
+    pub name: String,
+    #[serde(rename = "chatType")]
+    pub chat_type: ChatType,
+    pub color: ChatColorSettings,
+    pub size: UpdateChatSizeSettings,
+    pub hide: ChatHideSettings,
+    pub font: UpdateChatFontSettings,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Validate)]
+pub struct UpdateChatSizeSettings {
+    #[serde(rename = "maringTop")]
+    #[validate(range(min = 0))]
+    pub margin_top: f64,
+    #[serde(rename = "maringRight")]
+    #[validate(range(min = 0))]
+    pub margin_right: f64,
+    #[serde(rename = "maringBottom")]
+    #[validate(range(min = 0))]
+    pub margin_bottom: f64,
+    #[serde(rename = "maringLeft")]
+    #[validate(range(min = 0))]
+    pub margin_left: f64,
+    #[serde(rename = "paddingTop")]
+    #[validate(range(min = 0))]
+    pub padding_top: f64,
+    #[serde(rename = "paddingRight")]
+    #[validate(range(min = 0))]
+    pub padding_right: f64,
+    #[serde(rename = "paddingBottom")]
+    #[validate(range(min = 0))]
+    pub padding_bottom: f64,
+    #[serde(rename = "paddingLeft")]
+    #[validate(range(min = 0))]
+    pub padding_left: f64,
+    #[serde(rename = "borderTopLeftRadius")]
+    #[validate(range(min = 0))]
+    pub border_top_left_radius: f64,
+    #[serde(rename = "borderTopRightRadius")]
+    #[validate(range(min = 0))]
+    pub border_top_right_radius: f64,
+    #[serde(rename = "borderBottomLeftRadius")]
+    #[validate(range(min = 0))]
+    pub border_bottom_left_radius: f64,
+    #[serde(rename = "borderBottomRightRadius")]
+    #[validate(range(min = 0))]
+    pub border_bottom_right_radius: f64,
+    #[serde(rename = "maxMessages")]
+    #[validate(range(min = 5, max = 100))]
+    pub max_messages: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Validate)]
+pub struct UpdateChatFontSettings {
+    #[serde(rename = "fontFamily")]
+    pub font_family: String,
+    #[serde(rename = "nicknameFontWeight")]
+    #[validate(range(min = 0, max = 1000))]
+    pub nickname_font_weight: i32,
+    #[serde(rename = "textFontWeight")]
+    #[validate(range(min = 0, max = 1000))]
+    pub text_font_weight: i32,
+    #[serde(rename = "fontSize")]
+    #[validate(range(min = 0))]
     pub font_size: f64,
 }
