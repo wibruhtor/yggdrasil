@@ -10,10 +10,10 @@ pub type AppResult<T = ()> = Result<T, AppError>;
 
 #[derive(Debug)]
 pub struct AppError {
-    pub status_code: StatusCode,
-    pub message: Option<String>,
-    pub cause: Option<Error>,
-    pub other: Map<String, Value>,
+    status_code: StatusCode,
+    message: Option<String>,
+    cause: Option<Error>,
+    other: Map<String, Value>,
 }
 
 #[allow(dead_code)]
