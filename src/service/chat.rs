@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
     dao::ChatSettingsDao,
-    domain::{ChatSettings, ChatType, UpdateChatSettings},
+    domain::{ChatSettings, ChatSettingsInfo, ChatType, UpdateChatSettings},
     error::{AppError, AppResult},
 };
 
@@ -21,6 +21,16 @@ impl ChatService {
     pub async fn get_all_chat_settings(&self, user_id: &str) -> AppResult<Vec<ChatSettings>> {
         tracing::debug!("get all chat settings");
         self.chat_settings_dao.get_all_by_user_id(user_id).await
+    }
+
+    pub async fn get_all_chat_settings_info(
+        &self,
+        user_id: &str,
+    ) -> AppResult<Vec<ChatSettingsInfo>> {
+        tracing::debug!("get all chat settings info");
+        self.chat_settings_dao
+            .get_all_info_by_user_id(user_id)
+            .await
     }
 
     pub async fn get_chat_settings(&self, chat_settings_id: &Uuid) -> AppResult<ChatSettings> {

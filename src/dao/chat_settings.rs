@@ -7,8 +7,8 @@ use uuid::Uuid;
 
 use crate::{
     domain::{
-        ChatColorSettings, ChatFontSettings, ChatHideSettings, ChatSettings, ChatSizeSettings,
-        ChatType, UpdateChatSettings,
+        ChatColorSettings, ChatFontSettings, ChatHideSettings, ChatSettings, ChatSettingsInfo,
+        ChatSizeSettings, ChatType, UpdateChatSettings,
     },
     error::{AppError, AppResult},
 };
@@ -328,6 +328,34 @@ impl ChatSettingsDao {
         }
 
         Ok(chat_settings)
+    }
+
+    pub async fn get_all_info_by_user_id(&self, user_id: &str) -> AppResult<Vec<ChatSettingsInfo>> {
+        let span = tracing::debug_span!("get all chat settings by user id");
+
+        let recs = sqlx::query!(
+            r#"SELECT id, name, chat_type, user_id FROM chat_settings WHERE user_id = $1"#,
+            user_id,
+        )
+        .fetch_all((*self.pool).as_ref())
+        .instrument(span)
+        .await?;
+
+        let mut chat_settings_info: Vec<ChatSettingsInfo> = Vec::new();
+
+        for rec in recs {
+            chat_settings_info.push(ChatSettingsInfo {
+                id: rec.id,
+                name: rec.name,
+                chat_type: match rec.chat_type.as_ref() {
+                    "block" => ChatType::Block,
+                    _ => ChatType::Default,
+                },
+                user_id: rec.user_id,
+            })
+        }
+
+        Ok(chat_settings_info)
     }
 
     pub async fn delete(&self, id: &Uuid) -> AppResult {

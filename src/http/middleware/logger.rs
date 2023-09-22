@@ -51,18 +51,20 @@ pub async fn logger_middleware<B>(
         ip = socket.ip().to_string()
     );
 
-    let response = next.run(request).instrument(span).await;
+    let response = next.run(request).instrument(span.clone()).await;
 
     let latency = now.elapsed().as_micros();
     let status_code = response.status().as_u16();
 
-    if (400..500).contains(&status_code) {
-        tracing::warn!(status_code, latency, "log");
-    } else if (500..600).contains(&status_code) {
-        tracing::error!(status_code, latency, "log");
-    } else {
-        tracing::info!(status_code, latency, "log");
-    }
+    span.in_scope(|| {
+        if (400..500).contains(&status_code) {
+            tracing::warn!(status_code, latency, "log");
+        } else if (500..600).contains(&status_code) {
+            tracing::error!(status_code, latency, "log");
+        } else {
+            tracing::info!(status_code, latency, "log");
+        }
+    });
 
     Ok(response)
 }

@@ -3,6 +3,16 @@ use uuid::Uuid;
 use validator::Validate;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct ChatSettingsInfo {
+    pub id: Uuid,
+    pub name: String,
+    #[serde(rename = "chatType")]
+    pub chat_type: ChatType,
+    #[serde(rename = "userId")]
+    pub user_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ChatSettings {
     pub id: Uuid,
     pub name: String,
