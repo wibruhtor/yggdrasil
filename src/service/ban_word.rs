@@ -33,7 +33,7 @@ impl BanWordService {
         ban_word_filter_id: &Uuid,
         name: &str,
     ) -> AppResult<BanWordFilter> {
-        self.check_user_owning_of_filter_by_filter_id(user_id, ban_word_filter_id)
+        self.check_user_owning_of_filter_by_id(user_id, ban_word_filter_id)
             .await?;
 
         tracing::debug!("update ban word filter");
@@ -66,7 +66,7 @@ impl BanWordService {
     }
 
     pub async fn delete_filter(&self, user_id: &str, ban_word_filter_id: &Uuid) -> AppResult {
-        self.check_user_owning_of_filter_by_filter_id(user_id, ban_word_filter_id)
+        self.check_user_owning_of_filter_by_id(user_id, ban_word_filter_id)
             .await?;
 
         tracing::debug!("delete ban word filter");
@@ -88,7 +88,7 @@ impl BanWordService {
         ban_word_filter_id: &Uuid,
         ban_words: &Vec<String>,
     ) -> AppResult {
-        self.check_user_owning_of_filter_by_filter_id(user_id, ban_word_filter_id)
+        self.check_user_owning_of_filter_by_id(user_id, ban_word_filter_id)
             .await?;
 
         tracing::debug!("get ban words in filter");
@@ -123,7 +123,7 @@ impl BanWordService {
             .await
     }
 
-    async fn check_user_owning_of_filter_by_filter_id(
+    async fn check_user_owning_of_filter_by_id(
         &self,
         user_id: &str,
         ban_word_filter_id: &Uuid,

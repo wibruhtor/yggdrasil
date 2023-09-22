@@ -27,6 +27,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let token_dao = dao::TokenDao::new(Arc::clone(&pool), Arc::clone(&crypt));
     let ban_word_filter_dao = dao::BanWordFilterDao::new(Arc::clone(&pool));
     let ban_word_dao = dao::BanWordDao::new(Arc::clone(&pool));
+    let chat_settings_dao = dao::ChatSettingsDao::new(Arc::clone(&pool));
 
     let auth_service = service::AuthService::new(
         Arc::new(config.twitch),
@@ -38,7 +39,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let session_service = service::SessionService::new(Arc::clone(&token_dao));
     let ban_word_service =
         service::BanWordService::new(Arc::clone(&ban_word_filter_dao), Arc::clone(&ban_word_dao));
-    let chat_service = service::ChatService::new();
+    let chat_service = service::ChatService::new(Arc::clone(&chat_settings_dao));
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 

@@ -2,11 +2,4 @@
 
 ## QOL updates
 
-Nothing...
-
-## ChatSettings
-
-- Create Chat Settings
-- Get Chat Settings
-- Update Chat Settings
-- Delete Chat Settings
+- implement AppError for nested ValidationErrors

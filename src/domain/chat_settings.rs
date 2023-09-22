@@ -24,14 +24,17 @@ pub enum ChatType {
     Block,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Validate)]
 pub struct ChatColorSettings {
     #[serde(rename = "nicknameColor")]
-    pub nickname_color: u32,
+    #[validate(range(min = 0, max = 4294967295))]
+    pub nickname_color: i64,
     #[serde(rename = "backgroundColor")]
-    pub background_color: u32,
+    #[validate(range(min = 0, max = 4294967295))]
+    pub background_color: i64,
     #[serde(rename = "textColor")]
-    pub text_color: u32,
+    #[validate(range(min = 0, max = 4294967295))]
+    pub text_color: i64,
     #[serde(rename = "gradientOnlyForCustomNicknames")]
     pub gradient_only_for_custom_nicknames: bool,
 }
@@ -100,9 +103,12 @@ pub struct UpdateChatSettings {
     pub name: String,
     #[serde(rename = "chatType")]
     pub chat_type: ChatType,
+    #[validate]
     pub color: ChatColorSettings,
+    #[validate]
     pub size: UpdateChatSizeSettings,
     pub hide: ChatHideSettings,
+    #[validate]
     pub font: UpdateChatFontSettings,
 }
 
