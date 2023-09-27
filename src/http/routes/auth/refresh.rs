@@ -7,13 +7,12 @@ use validator::Validate;
 
 use crate::{
     error::{AppError, AppResult, ValidationErrorsWrapper},
-    jwt::{Claims, TokenType},
+    jwt::TokenType,
     service::AuthService,
 };
 
 pub async fn handler(
     Extension(auth_service): Extension<Arc<AuthService>>,
-    Extension(claims): Extension<Arc<Claims>>,
     Json(request): Json<RefreshRequest>,
 ) -> AppResult<Json<RefreshResponse>> {
     request
@@ -27,7 +26,7 @@ pub async fn handler(
         );
     }
 
-    let (access_token, refresh_token) = auth_service.refresh_token(&claims).await?;
+    let (access_token, refresh_token) = auth_service.refresh_token(&refresh_token_claims).await?;
 
     Ok(Json(RefreshResponse {
         access_token,

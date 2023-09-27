@@ -12,10 +12,7 @@ pub fn routes() -> Router {
     Router::new()
         .route("/authorize", routing::get(authorize::handler))
         .route("/exchange", routing::post(exchange::handler))
-        .route(
-            "/refresh",
-            routing::post(refresh::handler).layer(middleware::from_fn(auth_middleware)),
-        )
+        .route("/refresh", routing::post(refresh::handler))
         .route(
             "/logout",
             routing::delete(logout::handler).layer(middleware::from_fn(auth_middleware)),
