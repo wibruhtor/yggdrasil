@@ -2,7 +2,7 @@ use std::{sync::Arc, time::Duration};
 
 use axum::{
     http::{
-        header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN},
+        header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN, USER_AGENT},
         HeaderValue, Method, StatusCode,
     },
     middleware, routing, Extension, Router,
@@ -59,7 +59,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
         .layer(
             CorsLayer::new()
                 .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-                .allow_headers([AUTHORIZATION, ACCEPT, ORIGIN, CONTENT_TYPE])
+                .allow_headers([AUTHORIZATION, ACCEPT, ORIGIN, CONTENT_TYPE, USER_AGENT])
                 .allow_origin(config.http.allow_origin.parse::<HeaderValue>().unwrap()),
         )
         .layer(TimeoutLayer::new(Duration::from_secs(10)))
