@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use validator::Validate;
+use validator::{Validate, ValidationError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ChatSettingsInfo {
@@ -47,6 +47,20 @@ pub struct ChatColorSettings {
     pub text_color: i64,
     #[serde(rename = "gradientOnlyForCustomNicknames")]
     pub gradient_only_for_custom_nicknames: bool,
+    #[serde(rename = "customNicknames")]
+    pub custom_nicknames: Vec<CustomNickname>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Validate, Clone)]
+pub struct CustomNickname {
+    #[validate(length(min = 4, max = 25))]
+    pub nickname: String,
+    #[serde(rename = "startColor")]
+    #[validate(range(min = 0, max = 4294967295))]
+    pub start_color: i64,
+    #[serde(rename = "endColor")]
+    #[validate(range(min = 0, max = 4294967295))]
+    pub end_color: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -79,7 +93,7 @@ pub struct ChatSizeSettings {
     pub max_messages: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Validate)]
 pub struct ChatHideSettings {
     #[serde(rename = "hideMessagePattern")]
     pub hide_message_pattern: String,
@@ -91,8 +105,24 @@ pub struct ChatHideSettings {
     pub link_replacement: String,
     #[serde(rename = "banWordReplacement")]
     pub ban_word_replacement: String,
+    #[serde(rename = "nicknames")]
+    #[validate(custom(function = "vec_string_max_len::<4, 25>"))]
+    pub nicknames: Vec<String>,
     #[serde(rename = "banWordFilterId")]
     pub ban_word_filter_id: Option<Uuid>,
+}
+
+fn vec_string_max_len<const MIN: usize, const MAX: usize>(
+    value: &Vec<String>,
+) -> Result<(), ValidationError> {
+    for s in value.iter() {
+        if s.len() > MAX {
+            return Err(ValidationError::new("String too long"));
+        } else if s.len() < MIN {
+            return Err(ValidationError::new("String too short"));
+        }
+    }
+    Ok(())
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -117,6 +147,7 @@ pub struct UpdateChatSettings {
     pub color: ChatColorSettings,
     #[validate]
     pub size: UpdateChatSizeSettings,
+    #[validate]
     pub hide: ChatHideSettings,
     #[validate]
     pub font: UpdateChatFontSettings,

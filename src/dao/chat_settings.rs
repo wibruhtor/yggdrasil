@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::{
     domain::{
         ChatColorSettings, ChatFontSettings, ChatHideSettings, ChatSettings, ChatSettingsInfo,
-        ChatSizeSettings, ChatType, UpdateChatSettings,
+        ChatSizeSettings, ChatType, CustomNickname, UpdateChatSettings,
     },
     error::{AppError, AppResult},
 };
@@ -83,6 +83,7 @@ impl ChatSettingsDao {
                 background_color: rec.background_color,
                 text_color: rec.text_color,
                 gradient_only_for_custom_nicknames: rec.gradient_only_for_custom_nicknames,
+                custom_nicknames: Vec::new(),
             },
             size: ChatSizeSettings {
                 margin_top: rec.margin_top,
@@ -106,6 +107,7 @@ impl ChatSettingsDao {
                 link_replacement: rec.link_replacement,
                 ban_word_replacement: rec.ban_word_replacement,
                 ban_word_filter_id: rec.ban_word_filter_id,
+                nicknames: Vec::new(),
             },
             font: ChatFontSettings {
                 font_family: rec.font_family,
@@ -127,6 +129,9 @@ impl ChatSettingsDao {
             ChatType::Default => "default",
             ChatType::Block => "block",
         };
+
+        let mut tx = self.pool.begin().instrument(span.clone()).await?;
+
         let rec = sqlx::query!(
             r#"UPDATE chat_settings SET (name, chat_type, nickname_color, background_color, text_color, gradient_only_for_custom_nicknames, margin_top, margin_right, margin_bottom, margin_left, padding_top, padding_right, padding_bottom, padding_left, border_top_left_radius, border_top_right_radius, border_bottom_left_radius, border_bottom_right_radius, max_messages, hide_message_pattern, hide_point_rewards, hide_links, link_replacement, ban_word_replacement, ban_word_filter_id, font_family, nickname_font_weight, text_font_weight, font_size) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29) WHERE id = $30 RETURNING id, name, chat_type, nickname_color, background_color, text_color, gradient_only_for_custom_nicknames, margin_top, margin_right, margin_bottom, margin_left, padding_top, padding_right, padding_bottom, padding_left, border_top_left_radius, border_top_right_radius, border_bottom_left_radius, border_bottom_right_radius, max_messages, hide_message_pattern, hide_point_rewards, hide_links, link_replacement, ban_word_replacement, ban_word_filter_id, font_family, nickname_font_weight, text_font_weight, font_size, user_id"#,
             update_chat_settings.name,
@@ -160,9 +165,106 @@ impl ChatSettingsDao {
             update_chat_settings.font.font_size,
             id
         )
-        .fetch_one((*self.pool).as_ref())
-        .instrument(span)
+        .fetch_one(&mut *tx)
+        .instrument(span.clone())
         .await?;
+
+        // region: Update custom nicknames
+        let custom_nicknames = &update_chat_settings.color.custom_nicknames;
+        let previous_custom_nicknames = self.get_custom_nicknames(id).await?;
+
+        tracing::debug!("compute to create custom nicknames");
+        let mut to_create: Vec<CustomNickname> = Vec::new();
+        for custom_nickname in custom_nicknames {
+            if !previous_custom_nicknames.contains(custom_nickname) {
+                to_create.push(custom_nickname.clone());
+            }
+        }
+
+        if to_create.len() > 0 {
+            let nicknames: Vec<String> = to_create.iter().map(|v| v.nickname.clone()).collect();
+            let start_colors: Vec<i64> = to_create.iter().map(|v| v.start_color).collect();
+            let end_colors: Vec<i64> = to_create.iter().map(|v| v.end_color).collect();
+            let res = sqlx::query!(
+                r#"INSERT INTO chat_custom_nicknames (chat_settings_id, nickname, start_color, end_color) SELECT $1, * FROM unnest($2::varchar[], $3::bigint[], $4::bigint[]) RETURNING nickname"#,
+                id,
+                &nicknames,
+                &start_colors,
+                &end_colors
+            )
+            .fetch_all(&mut *tx)
+            .instrument(span.clone())
+            .await?;
+
+            for r in res {
+                println!("INSERTED: {}", r.nickname);
+            }
+        }
+
+        tracing::debug!("compute to delete custom nicknames");
+        let mut to_delete: Vec<CustomNickname> = Vec::new();
+        for custom_nickname in previous_custom_nicknames {
+            if !custom_nicknames.contains(&custom_nickname) {
+                to_delete.push(custom_nickname.clone());
+            }
+        }
+
+        if to_delete.len() > 0 {
+            let nicknames: Vec<String> = to_delete.iter().map(|v| v.nickname.clone()).collect();
+            sqlx::query!(
+                r#"DELETE FROM chat_custom_nicknames WHERE chat_settings_id = $1 AND nickname = any($2::varchar[]);"#,
+                id,
+                &nicknames,
+            )
+            .execute(&mut *tx)
+            .instrument(span.clone())
+            .await?;
+        }
+        // endregion
+        // region: Update hidden nicknames
+        let hidden_nicknames = &update_chat_settings.hide.nicknames;
+        let previous_hidden_nicknames = self.get_hidden_nicknames(id).await?;
+
+        tracing::debug!("compute to create hidden nicknames");
+        let mut to_create: Vec<String> = Vec::new();
+        for nickname in hidden_nicknames {
+            if !previous_hidden_nicknames.contains(nickname) {
+                to_create.push(nickname.clone());
+            }
+        }
+
+        if to_create.len() > 0 {
+            sqlx::query!(
+                r#"INSERT INTO chat_hidden_nicknames (chat_settings_id, nickname) SELECT $1, * FROM unnest($2::varchar[])"#,
+                id,
+                &to_create,
+            )
+            .execute(&mut *tx)
+            .instrument(span.clone())
+            .await?;
+        }
+
+        tracing::debug!("compute to delete custom nicknames");
+        let mut to_delete: Vec<String> = Vec::new();
+        for nickname in previous_hidden_nicknames {
+            if !hidden_nicknames.contains(&nickname) {
+                to_delete.push(nickname.clone());
+            }
+        }
+
+        if to_delete.len() > 0 {
+            sqlx::query!(
+                r#"DELETE FROM chat_hidden_nicknames WHERE chat_settings_id = $1 AND nickname = any($2::varchar[]);"#,
+                id,
+                &to_delete,
+            )
+            .execute(&mut *tx)
+            .instrument(span.clone())
+            .await?;
+        }
+        // endregion
+
+        tx.commit().instrument(span).await?;
 
         Ok(ChatSettings {
             id: rec.id,
@@ -176,6 +278,7 @@ impl ChatSettingsDao {
                 background_color: rec.background_color,
                 text_color: rec.text_color,
                 gradient_only_for_custom_nicknames: rec.gradient_only_for_custom_nicknames,
+                custom_nicknames: update_chat_settings.color.custom_nicknames.clone(),
             },
             size: ChatSizeSettings {
                 margin_top: rec.margin_top,
@@ -199,6 +302,7 @@ impl ChatSettingsDao {
                 link_replacement: rec.link_replacement,
                 ban_word_replacement: rec.ban_word_replacement,
                 ban_word_filter_id: rec.ban_word_filter_id,
+                nicknames: update_chat_settings.hide.nicknames.clone(),
             },
             font: ChatFontSettings {
                 font_family: rec.font_family,
@@ -221,6 +325,9 @@ impl ChatSettingsDao {
       .instrument(span)
       .await?;
 
+        let custom_nicknames = self.get_custom_nicknames(id).await?;
+        let hidden_nicknames = self.get_hidden_nicknames(id).await?;
+
         Ok(ChatSettings {
             id: rec.id,
             name: rec.name,
@@ -233,6 +340,7 @@ impl ChatSettingsDao {
                 background_color: rec.background_color,
                 text_color: rec.text_color,
                 gradient_only_for_custom_nicknames: rec.gradient_only_for_custom_nicknames,
+                custom_nicknames,
             },
             size: ChatSizeSettings {
                 margin_top: rec.margin_top,
@@ -256,6 +364,7 @@ impl ChatSettingsDao {
                 link_replacement: rec.link_replacement,
                 ban_word_replacement: rec.ban_word_replacement,
                 ban_word_filter_id: rec.ban_word_filter_id,
+                nicknames: hidden_nicknames,
             },
             font: ChatFontSettings {
                 font_family: rec.font_family,
@@ -265,6 +374,50 @@ impl ChatSettingsDao {
             },
             user_id: rec.user_id,
         })
+    }
+
+    async fn get_custom_nicknames(&self, id: &Uuid) -> AppResult<Vec<CustomNickname>> {
+        let span = tracing::debug_span!("get custom nicknames by chat settings id");
+
+        let recs = sqlx::query!(
+          r#"SELECT nickname, start_color, end_color FROM chat_custom_nicknames WHERE chat_settings_id = $1"#,
+          id,
+      )
+      .fetch_all((*self.pool).as_ref())
+      .instrument(span)
+      .await?;
+
+        let mut custom_nicknames: Vec<CustomNickname> = Vec::new();
+
+        for rec in recs {
+            custom_nicknames.push(CustomNickname {
+                nickname: rec.nickname,
+                start_color: rec.start_color,
+                end_color: rec.end_color,
+            });
+        }
+
+        Ok(custom_nicknames)
+    }
+
+    async fn get_hidden_nicknames(&self, id: &Uuid) -> AppResult<Vec<String>> {
+        let span = tracing::debug_span!("get custom nicknames by chat settings id");
+
+        let recs = sqlx::query!(
+            r#"SELECT nickname FROM chat_hidden_nicknames WHERE chat_settings_id = $1"#,
+            id,
+        )
+        .fetch_all((*self.pool).as_ref())
+        .instrument(span)
+        .await?;
+
+        let mut nicknames: Vec<String> = Vec::new();
+
+        for rec in recs {
+            nicknames.push(rec.nickname);
+        }
+
+        Ok(nicknames)
     }
 
     pub async fn get_all_by_user_id(&self, user_id: &str) -> AppResult<Vec<ChatSettings>> {
@@ -281,6 +434,9 @@ impl ChatSettingsDao {
         let mut chat_settings: Vec<ChatSettings> = Vec::new();
 
         for rec in recs {
+            let custom_nicknames = self.get_custom_nicknames(&rec.id).await?;
+            let hidden_nicknames = self.get_hidden_nicknames(&rec.id).await?;
+
             chat_settings.push(ChatSettings {
                 id: rec.id,
                 name: rec.name,
@@ -293,6 +449,7 @@ impl ChatSettingsDao {
                     background_color: rec.background_color,
                     text_color: rec.text_color,
                     gradient_only_for_custom_nicknames: rec.gradient_only_for_custom_nicknames,
+                    custom_nicknames,
                 },
                 size: ChatSizeSettings {
                     margin_top: rec.margin_top,
@@ -316,6 +473,7 @@ impl ChatSettingsDao {
                     link_replacement: rec.link_replacement,
                     ban_word_replacement: rec.ban_word_replacement,
                     ban_word_filter_id: rec.ban_word_filter_id,
+                    nicknames: hidden_nicknames,
                 },
                 font: ChatFontSettings {
                     font_family: rec.font_family,

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT nickname, start_color, end_color FROM chat_custom_nicknames WHERE chat_settings_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "nickname",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "start_color",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "end_color",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7b4cacebf63a658f7ec7094c87d0fa1dacea8af7a825b56ba0786420d70a2e38"
+}
