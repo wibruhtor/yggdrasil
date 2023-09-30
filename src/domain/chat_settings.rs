@@ -65,13 +65,13 @@ pub struct CustomNickname {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ChatSizeSettings {
-    #[serde(rename = "maringTop")]
+    #[serde(rename = "marginTop")]
     pub margin_top: f64,
-    #[serde(rename = "maringRight")]
+    #[serde(rename = "marginRight")]
     pub margin_right: f64,
-    #[serde(rename = "maringBottom")]
+    #[serde(rename = "marginBottom")]
     pub margin_bottom: f64,
-    #[serde(rename = "maringLeft")]
+    #[serde(rename = "marginLeft")]
     pub margin_left: f64,
     #[serde(rename = "paddingTop")]
     pub padding_top: f64,
@@ -155,16 +155,16 @@ pub struct UpdateChatSettings {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Validate)]
 pub struct UpdateChatSizeSettings {
-    #[serde(rename = "maringTop")]
+    #[serde(rename = "marginTop")]
     #[validate(range(min = 0))]
     pub margin_top: f64,
-    #[serde(rename = "maringRight")]
+    #[serde(rename = "marginRight")]
     #[validate(range(min = 0))]
     pub margin_right: f64,
-    #[serde(rename = "maringBottom")]
+    #[serde(rename = "marginBottom")]
     #[validate(range(min = 0))]
     pub margin_bottom: f64,
-    #[serde(rename = "maringLeft")]
+    #[serde(rename = "marginLeft")]
     #[validate(range(min = 0))]
     pub margin_left: f64,
     #[serde(rename = "paddingTop")]
