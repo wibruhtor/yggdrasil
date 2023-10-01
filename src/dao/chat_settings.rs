@@ -171,12 +171,17 @@ impl ChatSettingsDao {
 
         // region: Update custom nicknames
         let custom_nicknames = &update_chat_settings.color.custom_nicknames;
-        let previous_custom_nicknames = self.get_custom_nicknames(id).await?;
+        let previous_nicknames: Vec<String> = self
+            .get_custom_nicknames(id)
+            .await?
+            .iter()
+            .map(|v| v.nickname.clone())
+            .collect();
 
         tracing::debug!("compute to create custom nicknames");
         let mut to_create: Vec<CustomNickname> = Vec::new();
         for custom_nickname in custom_nicknames {
-            if !previous_custom_nicknames.contains(custom_nickname) {
+            if !previous_nicknames.contains(&custom_nickname.nickname) {
                 to_create.push(custom_nickname.clone());
             }
         }
@@ -202,19 +207,47 @@ impl ChatSettingsDao {
         }
 
         tracing::debug!("compute to delete custom nicknames");
-        let mut to_delete: Vec<CustomNickname> = Vec::new();
-        for custom_nickname in previous_custom_nicknames {
-            if !custom_nicknames.contains(&custom_nickname) {
+        let mut to_delete: Vec<String> = Vec::new();
+        let nicknames: Vec<String> = custom_nicknames
+            .clone()
+            .iter()
+            .map(|v| v.nickname.clone())
+            .collect();
+        for custom_nickname in previous_nicknames.clone() {
+            if !nicknames.contains(&custom_nickname) {
                 to_delete.push(custom_nickname.clone());
             }
         }
 
         if to_delete.len() > 0 {
-            let nicknames: Vec<String> = to_delete.iter().map(|v| v.nickname.clone()).collect();
             sqlx::query!(
                 r#"DELETE FROM chat_custom_nicknames WHERE chat_settings_id = $1 AND nickname = any($2::varchar[]);"#,
                 id,
+                &to_delete,
+            )
+            .execute(&mut *tx)
+            .instrument(span.clone())
+            .await?;
+        }
+
+        tracing::debug!("compute to create custom nicknames");
+        let mut to_update: Vec<CustomNickname> = Vec::new();
+        for custom_nickname in custom_nicknames {
+            if previous_nicknames.contains(&custom_nickname.nickname) {
+                to_update.push(custom_nickname.clone());
+            }
+        }
+
+        if to_update.len() > 0 {
+            let nicknames: Vec<String> = to_update.iter().map(|v| v.nickname.clone()).collect();
+            let start_colors: Vec<i64> = to_update.iter().map(|v| v.start_color).collect();
+            let end_colors: Vec<i64> = to_update.iter().map(|v| v.end_color).collect();
+            sqlx::query!(
+                r#"UPDATE chat_custom_nicknames SET start_color = bulk_query.start_color, end_color = bulk_query.end_color FROM (SELECT * FROM unnest($2::varchar[], $3::bigint[], $4::bigint[]) as t(nickname, start_color, end_color)) as bulk_query WHERE chat_custom_nicknames.chat_settings_id = $1 AND chat_custom_nicknames.nickname = bulk_query.nickname"#,
+                id,
                 &nicknames,
+                &start_colors,
+                &end_colors
             )
             .execute(&mut *tx)
             .instrument(span.clone())

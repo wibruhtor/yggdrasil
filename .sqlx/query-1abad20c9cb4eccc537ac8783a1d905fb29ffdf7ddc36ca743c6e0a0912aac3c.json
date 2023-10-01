@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE chat_custom_nicknames SET start_color = bulk_query.start_color, end_color = bulk_query.end_color FROM (SELECT * FROM unnest($2::varchar[], $3::bigint[], $4::bigint[]) as t(nickname, start_color, end_color)) as bulk_query WHERE chat_custom_nicknames.chat_settings_id = $1 AND chat_custom_nicknames.nickname = bulk_query.nickname",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "VarcharArray",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1abad20c9cb4eccc537ac8783a1d905fb29ffdf7ddc36ca743c6e0a0912aac3c"
+}
