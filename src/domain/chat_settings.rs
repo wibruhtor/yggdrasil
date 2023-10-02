@@ -30,8 +30,16 @@ pub struct ChatSettings {
 pub enum ChatType {
     #[serde(rename = "default")]
     Default,
+    #[serde(rename = "default-reverse")]
+    DefaultReverse,
     #[serde(rename = "block")]
     Block,
+    #[serde(rename = "block-reverse")]
+    BlockReverse,
+    #[serde(rename = "alternative-block")]
+    AlternativeBlock,
+    #[serde(rename = "alternative-block-reverse")]
+    AlternativeBlockReverse,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Validate)]

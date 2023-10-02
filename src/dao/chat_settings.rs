@@ -52,7 +52,11 @@ impl ChatSettingsDao {
 
         let chat_type = match *chat_type {
             ChatType::Default => "default",
+            ChatType::DefaultReverse => "default-reverse",
             ChatType::Block => "block",
+            ChatType::BlockReverse => "block-reverse",
+            ChatType::AlternativeBlock => "alternative-block",
+            ChatType::AlternativeBlockReverse => "alternative-block-reverse",
         };
         let rec = sqlx::query!(
           r#"INSERT INTO chat_settings (id, name, chat_type, user_id) VALUES ($1, $2, $3, $4) RETURNING id, name, chat_type, nickname_color, background_color, text_color, gradient_only_for_custom_nicknames, margin_top, margin_right, margin_bottom, margin_left, padding_top, padding_right, padding_bottom, padding_left, border_top_left_radius, border_top_right_radius, border_bottom_left_radius, border_bottom_right_radius, max_messages, hide_message_pattern, hide_point_rewards, hide_links, link_replacement, ban_word_replacement, ban_word_filter_id, font_family, nickname_font_weight, text_font_weight, font_size, user_id"#,
@@ -75,7 +79,11 @@ impl ChatSettingsDao {
             id: rec.id,
             name: rec.name,
             chat_type: match rec.chat_type.as_ref() {
+                "default-reverse" => ChatType::DefaultReverse,
                 "block" => ChatType::Block,
+                "block-reverse" => ChatType::BlockReverse,
+                "alternative-block" => ChatType::AlternativeBlock,
+                "alternative-block-reverse" => ChatType::AlternativeBlockReverse,
                 _ => ChatType::Default,
             },
             color: ChatColorSettings {
@@ -127,7 +135,11 @@ impl ChatSettingsDao {
         let span = tracing::debug_span!("update chat settings");
         let chat_type = match update_chat_settings.chat_type {
             ChatType::Default => "default",
+            ChatType::DefaultReverse => "default-reverse",
             ChatType::Block => "block",
+            ChatType::BlockReverse => "block-reverse",
+            ChatType::AlternativeBlock => "alternative-block",
+            ChatType::AlternativeBlockReverse => "alternative-block-reverse",
         };
 
         let mut tx = self.pool.begin().instrument(span.clone()).await?;
@@ -303,7 +315,11 @@ impl ChatSettingsDao {
             id: rec.id,
             name: rec.name,
             chat_type: match rec.chat_type.as_ref() {
+                "default-reverse" => ChatType::DefaultReverse,
                 "block" => ChatType::Block,
+                "block-reverse" => ChatType::BlockReverse,
+                "alternative-block" => ChatType::AlternativeBlock,
+                "alternative-block-reverse" => ChatType::AlternativeBlockReverse,
                 _ => ChatType::Default,
             },
             color: ChatColorSettings {
@@ -365,7 +381,11 @@ impl ChatSettingsDao {
             id: rec.id,
             name: rec.name,
             chat_type: match rec.chat_type.as_ref() {
+                "default-reverse" => ChatType::DefaultReverse,
                 "block" => ChatType::Block,
+                "block-reverse" => ChatType::BlockReverse,
+                "alternative-block" => ChatType::AlternativeBlock,
+                "alternative-block-reverse" => ChatType::AlternativeBlockReverse,
                 _ => ChatType::Default,
             },
             color: ChatColorSettings {
@@ -474,7 +494,11 @@ impl ChatSettingsDao {
                 id: rec.id,
                 name: rec.name,
                 chat_type: match rec.chat_type.as_ref() {
+                    "default-reverse" => ChatType::DefaultReverse,
                     "block" => ChatType::Block,
+                    "block-reverse" => ChatType::BlockReverse,
+                    "alternative-block" => ChatType::AlternativeBlock,
+                    "alternative-block-reverse" => ChatType::AlternativeBlockReverse,
                     _ => ChatType::Default,
                 },
                 color: ChatColorSettings {
@@ -539,7 +563,11 @@ impl ChatSettingsDao {
                 id: rec.id,
                 name: rec.name,
                 chat_type: match rec.chat_type.as_ref() {
+                    "default-reverse" => ChatType::DefaultReverse,
                     "block" => ChatType::Block,
+                    "block-reverse" => ChatType::BlockReverse,
+                    "alternative-block" => ChatType::AlternativeBlock,
+                    "alternative-block-reverse" => ChatType::AlternativeBlockReverse,
                     _ => ChatType::Default,
                 },
                 user_id: rec.user_id,
