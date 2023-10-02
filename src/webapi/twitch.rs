@@ -8,7 +8,7 @@ use tracing::Instrument;
 
 use crate::{
     config::twitch::Twitch,
-    domain::{TwitchEmote, TwitchUserInfo},
+    domain::{TwitchBadge, TwitchEmote, TwitchUserInfo},
     error::{AppError, AppResult},
 };
 
@@ -16,6 +16,8 @@ const TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
 const USERS_URL: &str = "https://api.twitch.tv/helix/users";
 const GLOBAL_EMOTES_URL: &str = "https://api.twitch.tv/helix/chat/emotes/global";
 const CHANNEL_EMOTES_URL: &str = "https://api.twitch.tv/helix/chat/emotes";
+const GLOBAL_BADGES_URL: &str = "https://api.twitch.tv/helix/chat/badges/global";
+const CHANNEL_BADGES_URL: &str = "https://api.twitch.tv/helix/chat/badges";
 
 pub struct TwitchWebApi {
     twitch_config: Arc<Twitch>,
@@ -144,7 +146,7 @@ impl TwitchWebApi {
 
         let url = reqwest::Url::parse_with_params(CHANNEL_EMOTES_URL, params).map_err(|e| {
             AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
-                .message("fail parse users url".to_string())
+                .message("fail parse channel emotes url".to_string())
                 .cause(e.into())
         })?;
 
@@ -166,7 +168,7 @@ impl TwitchWebApi {
         if resp.status() != StatusCode::OK {
             return Err(
                 AppError::new(StatusCode::INTERNAL_SERVER_ERROR).message(format!(
-                    "fail get global emotes with status code: {}",
+                    "fail get channel emotes with status code: {}",
                     resp.status().as_u16()
                 )),
             );
@@ -189,6 +191,115 @@ impl TwitchWebApi {
             .collect();
 
         Ok(emotes)
+    }
+
+    pub async fn get_global_badges(&self) -> AppResult<Vec<TwitchBadge>> {
+        let span = tracing::debug_span!("get global badges");
+
+        let client = reqwest::Client::new();
+
+        let access_token = self.get_access_token().instrument(span.clone()).await?;
+
+        let resp = client
+            .get(GLOBAL_BADGES_URL)
+            .bearer_auth(access_token)
+            .header("Client-Id", &self.twitch_config.client_id)
+            .send()
+            .instrument(span.clone())
+            .await
+            .map_err(|e| {
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                    .message("fail get global badges".to_string())
+                    .cause(e.into())
+            })?;
+
+        if resp.status() != StatusCode::OK {
+            return Err(
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR).message(format!(
+                    "fail get global badges with status code: {}",
+                    resp.status().as_u16()
+                )),
+            );
+        }
+
+        let get_badges_response = resp
+            .json::<GetBadgesResponse>()
+            .instrument(span)
+            .await
+            .map_err(|e| {
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                    .message("fail parse json of get badges response".to_string())
+                    .cause(e.into())
+            })?;
+
+        let mut badges: Vec<TwitchBadge> = Vec::new();
+
+        get_badges_response.data.iter().for_each(|set| {
+            set.versions
+                .iter()
+                .for_each(|badge| badges.push(badge.to_twitch_badge(&set.set_id)))
+        });
+
+        Ok(badges)
+    }
+
+    pub async fn get_channel_badges(&self, channel_id: &str) -> AppResult<Vec<TwitchBadge>> {
+        let span = tracing::debug_span!("get channel badges");
+
+        let client = reqwest::Client::new();
+
+        let mut params: HashMap<&str, &str> = HashMap::new();
+        params.insert("broadcaster_id", channel_id);
+
+        let url = reqwest::Url::parse_with_params(CHANNEL_BADGES_URL, params).map_err(|e| {
+            AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                .message("fail parse channel badges url".to_string())
+                .cause(e.into())
+        })?;
+
+        let access_token = self.get_access_token().instrument(span.clone()).await?;
+
+        let resp = client
+            .get(url)
+            .bearer_auth(access_token)
+            .header("Client-Id", &self.twitch_config.client_id)
+            .send()
+            .instrument(span.clone())
+            .await
+            .map_err(|e| {
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                    .message("fail get channel emotes".to_string())
+                    .cause(e.into())
+            })?;
+
+        if resp.status() != StatusCode::OK {
+            return Err(
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR).message(format!(
+                    "fail get channel badges with status code: {}",
+                    resp.status().as_u16()
+                )),
+            );
+        }
+
+        let get_badges_response = resp
+            .json::<GetBadgesResponse>()
+            .instrument(span)
+            .await
+            .map_err(|e| {
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                    .message("fail parse json of get badges response".to_string())
+                    .cause(e.into())
+            })?;
+
+        let mut badges: Vec<TwitchBadge> = Vec::new();
+
+        get_badges_response.data.iter().for_each(|set| {
+            set.versions
+                .iter()
+                .for_each(|badge| badges.push(badge.to_twitch_badge(&set.set_id)))
+        });
+
+        Ok(badges)
     }
 
     async fn get_access_token(&self) -> AppResult<String> {
@@ -310,5 +421,32 @@ impl RawTwitchEmote {
             .replace("{{format}}", "default")
             .replace("{{theme_mode}}", self.theme_mode.first().unwrap())
             .replace("{{scale}}", self.scale.last().unwrap())
+    }
+}
+
+#[derive(Deserialize, Debug)]
+struct GetBadgesResponse {
+    data: Vec<RawTwitchSet>,
+}
+
+#[derive(Deserialize, Debug)]
+struct RawTwitchSet {
+    set_id: String,
+    versions: Vec<RawTwitchBadge>,
+}
+
+#[derive(Deserialize, Debug)]
+struct RawTwitchBadge {
+    id: String,
+    image_url_4x: String,
+}
+
+impl RawTwitchBadge {
+    fn to_twitch_badge(&self, set: &str) -> TwitchBadge {
+        TwitchBadge {
+            id: self.id.clone(),
+            set: set.to_owned(),
+            image: self.image_url_4x.clone(),
+        }
     }
 }

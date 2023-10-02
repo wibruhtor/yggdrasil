@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    domain::{TwitchEmote, TwitchUserInfo},
+    domain::{TwitchBadge, TwitchEmote, TwitchUserInfo},
     error::AppResult,
     webapi::TwitchWebApi,
 };
@@ -25,5 +25,13 @@ impl TwitchService {
 
     pub async fn get_channel_emotes(&self, channel_id: &str) -> AppResult<Vec<TwitchEmote>> {
         self.twitch_web_api.get_channel_emotes(channel_id).await
+    }
+
+    pub async fn get_global_badges(&self) -> AppResult<Vec<TwitchBadge>> {
+        self.twitch_web_api.get_global_badges().await
+    }
+
+    pub async fn get_channel_badges(&self, channel_id: &str) -> AppResult<Vec<TwitchBadge>> {
+        self.twitch_web_api.get_channel_badges(channel_id).await
     }
 }
