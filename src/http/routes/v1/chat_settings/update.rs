@@ -16,14 +16,14 @@ pub async fn handler(
     Extension(chat_service): Extension<Arc<ChatService>>,
     Extension(claims): Extension<Arc<Claims>>,
     Path(path_params): Path<UpdateChatSettingsPathParams>,
-    Json(request): Json<UpdateChatSettings>,
+    Json(mut request): Json<UpdateChatSettings>,
 ) -> AppResult<Json<ChatSettings>> {
     request
         .validate()
         .map_err(|e| ValidationErrorsWrapper::from(e))?;
 
     let filter = chat_service
-        .update_chat_settings(&claims.sub, &path_params.chat_settings_id, &request)
+        .update_chat_settings(&claims.sub, &path_params.chat_settings_id, &mut request)
         .await?;
 
     Ok(Json(filter))

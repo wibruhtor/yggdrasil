@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
+use itertools::Itertools;
 use reqwest::StatusCode;
 use uuid::Uuid;
 
 use crate::{
     dao::ChatSettingsDao,
-    domain::{ChatSettings, ChatSettingsInfo, ChatType, UpdateChatSettings},
+    domain::{ChatSettings, ChatSettingsInfo, ChatType, CustomNickname, UpdateChatSettings},
     error::{AppError, AppResult},
 };
 
@@ -54,10 +55,31 @@ impl ChatService {
         &self,
         user_id: &str,
         chat_settings_id: &Uuid,
-        update_chat_settings: &UpdateChatSettings,
+        update_chat_settings: &mut UpdateChatSettings,
     ) -> AppResult<ChatSettings> {
         self.check_user_owning_of_chat_settings_by_id(user_id, chat_settings_id)
             .await?;
+
+        let hidden_nicknames: Vec<String> = update_chat_settings
+            .hide
+            .nicknames
+            .iter()
+            .map(|v| v.trim().to_lowercase())
+            .unique()
+            .collect();
+        update_chat_settings.hide.nicknames = hidden_nicknames;
+        let custom_nicknames: Vec<CustomNickname> = update_chat_settings
+            .color
+            .custom_nicknames
+            .clone()
+            .iter_mut()
+            .map(|v| {
+                v.nickname = v.nickname.trim().to_lowercase();
+                v.clone()
+            })
+            .unique_by(|v| v.nickname.clone())
+            .collect();
+        update_chat_settings.color.custom_nicknames = custom_nicknames;
 
         tracing::debug!("update ban word filter");
         self.chat_settings_dao

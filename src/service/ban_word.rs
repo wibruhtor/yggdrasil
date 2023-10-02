@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use axum::http::StatusCode;
+use itertools::Itertools;
 use uuid::Uuid;
 
 use crate::{
@@ -91,6 +92,12 @@ impl BanWordService {
         self.check_user_owning_of_filter_by_id(user_id, ban_word_filter_id)
             .await?;
 
+        let ban_words: Vec<String> = ban_words
+            .iter()
+            .map(|word| word.trim().to_lowercase())
+            .unique()
+            .collect();
+
         tracing::debug!("get ban words in filter");
         let previous_ban_words = self
             .ban_word_dao
@@ -99,8 +106,8 @@ impl BanWordService {
 
         tracing::debug!("compute to create ban words");
         let mut to_create_ban_words: Vec<String> = Vec::new();
-        for ban_word in ban_words {
-            if !previous_ban_words.contains(ban_word) {
+        for ban_word in ban_words.clone() {
+            if !previous_ban_words.contains(&ban_word) {
                 to_create_ban_words.push(ban_word.clone());
             }
         }
