@@ -8,12 +8,14 @@ use tracing::Instrument;
 
 use crate::{
     config::twitch::Twitch,
-    domain::TwitchUserInfo,
+    domain::{TwitchEmote, TwitchUserInfo},
     error::{AppError, AppResult},
 };
 
 const TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
 const USERS_URL: &str = "https://api.twitch.tv/helix/users";
+const GLOBAL_EMOTES_URL: &str = "https://api.twitch.tv/helix/chat/emotes/global";
+const CHANNEL_EMOTES_URL: &str = "https://api.twitch.tv/helix/chat/emotes";
 
 pub struct TwitchWebApi {
     twitch_config: Arc<Twitch>,
@@ -82,6 +84,111 @@ impl TwitchWebApi {
             Some(info) => Ok(info.clone()),
             None => Err(AppError::new(StatusCode::NOT_FOUND).message("not found".to_string())),
         }
+    }
+
+    pub async fn get_global_emotes(&self) -> AppResult<Vec<TwitchEmote>> {
+        let span = tracing::debug_span!("get global emotes");
+
+        let client = reqwest::Client::new();
+
+        let access_token = self.get_access_token().instrument(span.clone()).await?;
+
+        let resp = client
+            .get(GLOBAL_EMOTES_URL)
+            .bearer_auth(access_token)
+            .header("Client-Id", &self.twitch_config.client_id)
+            .send()
+            .instrument(span.clone())
+            .await
+            .map_err(|e| {
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                    .message("fail get global emotes".to_string())
+                    .cause(e.into())
+            })?;
+
+        if resp.status() != StatusCode::OK {
+            return Err(
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR).message(format!(
+                    "fail get global emotes with status code: {}",
+                    resp.status().as_u16()
+                )),
+            );
+        }
+
+        let get_emotes_response = resp
+            .json::<GetEmotesResponse>()
+            .instrument(span)
+            .await
+            .map_err(|e| {
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                    .message("fail parse json of get emotes response".to_string())
+                    .cause(e.into())
+            })?;
+
+        let emotes: Vec<TwitchEmote> = get_emotes_response
+            .data
+            .iter()
+            .map(|v| v.to_twitch_emote(&get_emotes_response.template))
+            .collect();
+
+        Ok(emotes)
+    }
+
+    pub async fn get_channel_emotes(&self, channel_id: &str) -> AppResult<Vec<TwitchEmote>> {
+        let span = tracing::debug_span!("get channel emotes");
+
+        let client = reqwest::Client::new();
+
+        let mut params: HashMap<&str, &str> = HashMap::new();
+        params.insert("broadcaster_id", channel_id);
+
+        let url = reqwest::Url::parse_with_params(CHANNEL_EMOTES_URL, params).map_err(|e| {
+            AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                .message("fail parse users url".to_string())
+                .cause(e.into())
+        })?;
+
+        let access_token = self.get_access_token().instrument(span.clone()).await?;
+
+        let resp = client
+            .get(url)
+            .bearer_auth(access_token)
+            .header("Client-Id", &self.twitch_config.client_id)
+            .send()
+            .instrument(span.clone())
+            .await
+            .map_err(|e| {
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                    .message("fail get channel emotes".to_string())
+                    .cause(e.into())
+            })?;
+
+        if resp.status() != StatusCode::OK {
+            return Err(
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR).message(format!(
+                    "fail get global emotes with status code: {}",
+                    resp.status().as_u16()
+                )),
+            );
+        }
+
+        let get_emotes_response = resp
+            .json::<GetEmotesResponse>()
+            .instrument(span)
+            .await
+            .map_err(|e| {
+                AppError::new(StatusCode::INTERNAL_SERVER_ERROR)
+                    .message("fail parse json of get emotes response".to_string())
+                    .cause(e.into())
+            })?;
+
+        let emotes: Vec<TwitchEmote> = get_emotes_response
+            .data
+            .iter()
+            .map(|v| v.to_twitch_emote(&get_emotes_response.template))
+            .collect();
+
+        Ok(emotes)
     }
 
     async fn get_access_token(&self) -> AppResult<String> {
@@ -169,7 +276,39 @@ struct GetAppAccessTokenResponse {
     expires_in: i64,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug)]
 struct GetUserInfoResponse {
     data: Vec<TwitchUserInfo>,
+}
+
+#[derive(Deserialize, Debug)]
+struct GetEmotesResponse {
+    data: Vec<RawTwitchEmote>,
+    template: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct RawTwitchEmote {
+    id: String,
+    name: String,
+    scale: Vec<String>,
+    theme_mode: Vec<String>,
+}
+
+impl RawTwitchEmote {
+    fn to_twitch_emote(&self, template: &str) -> TwitchEmote {
+        TwitchEmote {
+            id: self.id.clone(),
+            name: self.name.clone(),
+            image: self.image(template),
+        }
+    }
+
+    fn image(&self, template: &str) -> String {
+        template
+            .replace("{{id}}", &self.id)
+            .replace("{{format}}", "default")
+            .replace("{{theme_mode}}", self.theme_mode.first().unwrap())
+            .replace("{{scale}}", self.scale.last().unwrap())
+    }
 }
