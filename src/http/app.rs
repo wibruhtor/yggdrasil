@@ -11,7 +11,7 @@ use axum_prometheus::PrometheusMetricLayer;
 use sqlx::{Pool, Postgres};
 use tower_http::{cors::CorsLayer, timeout::TimeoutLayer};
 
-use crate::{config::Config, crypt, dao, error::AppError, jwt, service};
+use crate::{config::Config, crypt, dao, error::AppError, jwt, service, webapi};
 
 use super::{
     middleware::{logger_middleware, request_id_middleware},
@@ -29,8 +29,10 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let ban_word_dao = dao::BanWordDao::new(Arc::clone(&pool));
     let chat_settings_dao = dao::ChatSettingsDao::new(Arc::clone(&pool));
 
+    let twitch_web_api = webapi::TwitchWebApi::new(Arc::clone(&config.twitch));
+
     let auth_service = service::AuthService::new(
-        Arc::new(config.twitch),
+        Arc::clone(&config.twitch),
         Arc::clone(&jwt),
         Arc::clone(&user_dao),
         Arc::clone(&twitch_data_dao),
@@ -40,6 +42,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
     let ban_word_service =
         service::BanWordService::new(Arc::clone(&ban_word_filter_dao), Arc::clone(&ban_word_dao));
     let chat_service = service::ChatService::new(Arc::clone(&chat_settings_dao));
+    let twitch_service = service::TwitchService::new(Arc::clone(&twitch_web_api));
 
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
 
@@ -53,6 +56,7 @@ pub fn new(config: Config, pool: Arc<Box<Pool<Postgres>>>) -> Router {
         .layer(Extension(Arc::new(session_service)))
         .layer(Extension(Arc::new(ban_word_service)))
         .layer(Extension(Arc::new(chat_service)))
+        .layer(Extension(Arc::new(twitch_service)))
         .layer(middleware::from_fn(logger_middleware))
         .layer(prometheus_layer)
         .layer(middleware::from_fn(request_id_middleware))

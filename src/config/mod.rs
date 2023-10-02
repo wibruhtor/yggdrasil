@@ -1,4 +1,4 @@
-use std::env::VarError;
+use std::{env::VarError, sync::Arc};
 
 use anyhow::Result;
 
@@ -11,12 +11,12 @@ pub mod twitch;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Config {
-    pub http: http::Http,
-    pub logging: logging::Logging,
-    pub database: database::Database,
-    pub twitch: twitch::Twitch,
-    pub jwt: jwt::Jwt,
-    pub crypt: crypt::Crypt,
+    pub http: Arc<http::Http>,
+    pub logging: Arc<logging::Logging>,
+    pub database: Arc<database::Database>,
+    pub twitch: Arc<twitch::Twitch>,
+    pub jwt: Arc<jwt::Jwt>,
+    pub crypt: Arc<crypt::Crypt>,
 }
 
 impl Config {
@@ -29,12 +29,12 @@ impl Config {
         };
 
         Ok(Config {
-            http: http::Http::new(),
-            logging: logging::Logging::new(),
-            database: database::Database::new(),
-            twitch: twitch::Twitch::new(),
-            jwt: jwt::Jwt::new(),
-            crypt: crypt::Crypt::new(),
+            http: Arc::new(http::Http::new()),
+            logging: Arc::new(logging::Logging::new()),
+            database: Arc::new(database::Database::new()),
+            twitch: Arc::new(twitch::Twitch::new()),
+            jwt: Arc::new(jwt::Jwt::new()),
+            crypt: Arc::new(crypt::Crypt::new()),
         })
     }
 }
