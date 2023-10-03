@@ -1,13 +1,10 @@
 use std::time::Instant;
 
 use axum::{
-    extract::MatchedPath,
-    headers::UserAgent,
-    http::{HeaderMap, Request},
-    middleware::Next,
-    response::Response,
+    extract::MatchedPath, headers::UserAgent, http::Request, middleware::Next, response::Response,
     TypedHeader,
 };
+use axum_client_ip::LeftmostXForwardedFor;
 use tracing::Instrument;
 
 use crate::error::AppResult;
@@ -16,7 +13,7 @@ use super::request_id::REQUEST_ID_HEADER_NAME;
 
 pub async fn logger_middleware<B>(
     TypedHeader(user_agent): TypedHeader<UserAgent>,
-    headers: HeaderMap,
+    ip: LeftmostXForwardedFor,
     request: Request<B>,
     next: Next<B>,
 ) -> AppResult<Response> {
@@ -42,9 +39,14 @@ pub async fn logger_middleware<B>(
     };
     let method = request.method().as_str();
 
-    let ip: &str = headers.get("real-ip").unwrap().to_str().unwrap();
-
-    let span = tracing::info_span!("endpoint", request_id, method, path, user_agent, ip);
+    let span = tracing::info_span!(
+        "endpoint",
+        request_id,
+        method,
+        path,
+        user_agent,
+        ip = ip.0.to_string()
+    );
 
     let response = next.run(request).instrument(span.clone()).await;
 
