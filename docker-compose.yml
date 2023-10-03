@@ -1,6 +1,6 @@
 services:
   app:
-    image: ghcr.io/wibruhtor/yggdrasil
+    image: ghcr.io/wibruhtor/yggdrasil:main
     container_name: yggdrasil
     restart: on-failure
     depends_on:
@@ -8,12 +8,6 @@ services:
         condition: service_healthy
     ports:
       - 3000:3000
-    volumes:
-      - ./target:/app/target
-      - ./migrations:/app/migrations
-      - ./src:/app/src
-      - ./Cargo.toml:/app/Cargo.toml
-      - ./Cargo.lock:/app/Cargo.lock
     env_file:
       - .env
     networks:
