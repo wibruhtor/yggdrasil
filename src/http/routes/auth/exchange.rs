@@ -1,6 +1,6 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::sync::Arc;
 
-use axum::{extract::ConnectInfo, headers::UserAgent, Extension, Json, TypedHeader};
+use axum::{headers::UserAgent, http::HeaderMap, Extension, Json, TypedHeader};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -12,19 +12,17 @@ use crate::{
 pub async fn handler(
     Extension(auth_service): Extension<Arc<AuthService>>,
     TypedHeader(user_agent): TypedHeader<UserAgent>,
-    ConnectInfo(socket): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     Json(request): Json<ExchangeRequest>,
 ) -> AppResult<Json<ExchangeResponse>> {
     request
         .validate()
         .map_err(|e| ValidationErrorsWrapper::from(e))?;
 
+    let ip: &str = headers.get("real-ip").unwrap().to_str().unwrap();
+
     let (access_token, refresh_token) = auth_service
-        .exchange_code(
-            &request.code,
-            user_agent.as_str(),
-            socket.ip().to_string().as_ref(),
-        )
+        .exchange_code(&request.code, user_agent.as_str(), ip)
         .await?;
 
     Ok(Json(ExchangeResponse {

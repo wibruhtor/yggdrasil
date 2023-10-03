@@ -1,9 +1,9 @@
-use std::{net::SocketAddr, time::Instant};
+use std::time::Instant;
 
 use axum::{
-    extract::{ConnectInfo, MatchedPath},
+    extract::MatchedPath,
     headers::UserAgent,
-    http::Request,
+    http::{HeaderMap, Request},
     middleware::Next,
     response::Response,
     TypedHeader,
@@ -16,7 +16,7 @@ use super::request_id::REQUEST_ID_HEADER_NAME;
 
 pub async fn logger_middleware<B>(
     TypedHeader(user_agent): TypedHeader<UserAgent>,
-    ConnectInfo(socket): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
     request: Request<B>,
     next: Next<B>,
 ) -> AppResult<Response> {
@@ -42,14 +42,9 @@ pub async fn logger_middleware<B>(
     };
     let method = request.method().as_str();
 
-    let span = tracing::info_span!(
-        "endpoint",
-        request_id,
-        method,
-        path,
-        user_agent,
-        ip = socket.ip().to_string()
-    );
+    let ip: &str = headers.get("real-ip").unwrap().to_str().unwrap();
+
+    let span = tracing::info_span!("endpoint", request_id, method, path, user_agent, ip);
 
     let response = next.run(request).instrument(span.clone()).await;
 
