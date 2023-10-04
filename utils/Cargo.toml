@@ -15,11 +15,11 @@ validator = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
 types = { path = "../types" }
-jsonwebtoken = "8"
+jsonwebtoken = { workspace = true }
 # Web
 axum = { workspace = true }
 # Crypt
-magic-crypt = "3.1"
+magic-crypt = { workspace = true }
 
 [dev-dependencies]
 fake = { workspace = true }
