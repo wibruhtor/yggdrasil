@@ -5,7 +5,7 @@ use jsonwebtoken::errors::ErrorKind;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use types::{AppError, AppResult};
+use types::error::{AppError, AppResult};
 
 const AUDIENCE: &str = "wibruhtor";
 const ISSUER: &str = "api.wibruhtor.ru";

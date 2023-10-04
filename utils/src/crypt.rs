@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::http::StatusCode;
 use magic_crypt::{MagicCrypt256, MagicCryptTrait, new_magic_crypt};
 
-use types::{AppError, AppResult};
+use types::error::{AppError, AppResult};
 
 pub struct Crypt {
     cipher: MagicCrypt256,

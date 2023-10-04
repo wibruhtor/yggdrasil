@@ -1,3 +1,3 @@
-mod app_error;
-
-pub use app_error::*;
+pub mod error;
+pub mod domain;
+pub mod twitch;
