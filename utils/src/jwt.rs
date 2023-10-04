@@ -102,23 +102,24 @@ impl JwtMaker {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
+    /// Token id
     pub jti: Uuid,
-    // Token id
+    /// Type of token. access_token or refresh_token
     pub typ: TokenType,
-    // Type of token. access_token or refresh_token
+    /// Audience
     pub aud: String,
-    // Audience
+    /// Expiration time (as UTC timestamp)
     pub exp: i64,
-    // Expiration time (as UTC timestamp)
+    /// Issued at (as UTC timestamp)
     pub iat: i64,
-    // Issued at (as UTC timestamp)
+    /// Issuer
     pub iss: String,
-    // Issuer
+    /// Not Before (as UTC timestamp)
     pub nbf: i64,
-    // Not Before (as UTC timestamp)
+    /// Subject (user id)
     pub sub: String,
-    // Subject (user id)
-    pub username: String, // Username
+    /// Username
+    pub username: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -155,4 +156,70 @@ jwt_errors! {
     (INVALID_TOKEN_ERROR, StatusCode::FORBIDDEN, "invalid token");
     (EXPIRED_TOKEN_ERROR, StatusCode::FORBIDDEN, "expired token");
     (FAIL_VALIDATE_TOKEN_ERROR, StatusCode::FORBIDDEN, "fail validate token");
+}
+
+#[cfg(test)]
+pub mod tests {
+    use chrono::{Duration, NaiveDateTime};
+    use fake::{Dummy, Fake, Faker, faker::name::en::Name};
+    use uuid::Uuid;
+
+    use crate::jwt::{ACCESS_TOKEN_TTL_IN_HOURS, JwtMaker, REFRESH_TOKEN_TTL_IN_DAYS, TokenType};
+
+    #[derive(Debug, Dummy)]
+    #[allow(dead_code)]
+    struct TestData {
+        key: String,
+        token_id: Uuid,
+        user_id: String,
+        #[dummy(faker = "Name()")]
+        username: String,
+        datetime: NaiveDateTime,
+    }
+
+    #[test]
+    fn access_tokens() {
+        for _ in 1..100 {
+            let data = Faker.fake::<TestData>();
+
+            let expired_at = data.datetime.timestamp() + Duration::hours(ACCESS_TOKEN_TTL_IN_HOURS).num_seconds();
+
+            let jwt_maker = JwtMaker::new(&data.key);
+
+            let access_token_result = jwt_maker.generate_access_token(&data.token_id, &data.user_id, &data.username, &data.datetime);
+            assert!(access_token_result.is_ok());
+            let (access_token, claims) = access_token_result.unwrap();
+
+            assert!(!access_token.is_empty());
+            assert_eq!(claims.jti, data.token_id);
+            assert_eq!(claims.sub, data.user_id);
+            assert_eq!(claims.username, data.username);
+            assert_eq!(claims.typ, TokenType::Access);
+            assert_eq!(claims.iat, data.datetime.timestamp());
+            assert_eq!(claims.exp, expired_at);
+        }
+    }
+
+    #[test]
+    fn refresh_tokens() {
+        for _ in 1..100 {
+            let data = Faker.fake::<TestData>();
+
+            let expired_at = data.datetime.timestamp() + Duration::days(REFRESH_TOKEN_TTL_IN_DAYS).num_seconds();
+
+            let jwt_maker = JwtMaker::new(&data.key);
+
+            let refresh_token_result = jwt_maker.generate_refresh_token(&data.token_id, &data.user_id, &data.username, &data.datetime);
+            assert!(refresh_token_result.is_ok());
+            let (refresh_token, claims) = refresh_token_result.unwrap();
+
+            assert!(!refresh_token.is_empty());
+            assert_eq!(claims.jti, data.token_id);
+            assert_eq!(claims.sub, data.user_id);
+            assert_eq!(claims.username, data.username);
+            assert_eq!(claims.typ, TokenType::Refresh);
+            assert_eq!(claims.iat, data.datetime.timestamp());
+            assert_eq!(claims.exp, expired_at);
+        }
+    }
 }

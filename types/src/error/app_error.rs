@@ -1,9 +1,10 @@
 use std::fmt::{Display, Formatter};
+
 use anyhow::Error;
 use axum::{
     http::StatusCode,
-    response::{IntoResponse, Response},
     Json,
+    response::{IntoResponse, Response},
 };
 use serde_json::{Map, Value};
 
@@ -147,32 +148,6 @@ impl Default for AppError {
 
 impl Clone for AppError {
     /// On clone set cause and other to None
-    ///
-    /// Example
-    /// ```
-    /// use anyhow::anyhow;
-    /// use axum::http::StatusCode;
-    /// use serde_json::{Map, Value};
-    /// use types::AppError;
-    ///
-    /// let mut map = Map::new();
-    /// map.insert("America".to_string(), Value::String("Alex".to_string()));
-    /// map.insert("Russian".to_string(), Value::String("Sasha".to_string()));
-    /// assert_eq!(
-    ///     AppError {
-    ///         status_code: StatusCode::INTERNAL_SERVER_ERROR,
-    ///         message: Some("unexpected error"),
-    ///         cause: Some(anyhow!("something went wrong")),
-    ///         other: Some(map)
-    ///     },
-    ///     AppError {
-    ///          status_code: StatusCode::INTERNAL_SERVER_ERROR,
-    ///          message: Some("unexpected error"),
-    ///          cause: None,
-    ///          other: None
-    ///      }
-    /// );
-    /// ```
     fn clone(&self) -> Self {
         AppError {
             status_code: self.status_code.clone(),

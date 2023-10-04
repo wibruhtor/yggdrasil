@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::http::StatusCode;
 use magic_crypt::{MagicCrypt256, MagicCryptTrait, new_magic_crypt};
 
@@ -10,10 +8,10 @@ pub struct Crypt {
 }
 
 impl Crypt {
-    pub fn new(secret: &str) -> Arc<Self> {
-        Arc::new(Crypt {
+    pub fn new(secret: &str) -> Self {
+        Crypt {
             cipher: new_magic_crypt!(secret, 256),
-        })
+        }
     }
 
     pub fn encrypt(&self, data: &[u8]) -> Vec<u8> {
@@ -61,4 +59,46 @@ macro_rules! crypt_errors {
 crypt_errors! {
     (FAIL_DECRYPT_BYTES, StatusCode::INTERNAL_SERVER_ERROR, "fail decrypt bytes");
     (FAIL_DECRYPT_STRING, StatusCode::INTERNAL_SERVER_ERROR, "fail decrypt string");
+}
+
+#[cfg(test)]
+mod tests {
+    use fake::{Fake, Faker};
+
+    use crate::crypt::Crypt;
+
+    #[test]
+    fn bytes() {
+        for _ in 1..100 {
+            let key = (0..64).fake::<String>();
+            let bytes: Vec<u8> = (0..1024).map(|_| Faker.fake::<u8>()).collect();
+
+            let crypt = Crypt::new(&key);
+
+            let encrypted_bytes = crypt.encrypt(&bytes);
+            let decrypted_bytes = crypt.decrypt(&encrypted_bytes);
+            assert!(decrypted_bytes.is_ok());
+            let decrypted_bytes = decrypted_bytes.unwrap();
+
+            assert_ne!(bytes, encrypted_bytes);
+            assert_eq!(bytes, decrypted_bytes);
+        }
+    }
+
+    #[test]
+    fn strings() {
+        for _ in 1..100 {
+            let key = (0..64).fake::<String>();
+            let string = (0..1024).fake::<String>();
+
+            let crypt = Crypt::new(&key);
+
+            let encrypted_string = crypt.encrypt_str(&string);
+            let decrypted_string = crypt.decrypt_str(&encrypted_string);
+
+            assert_ne!(string, encrypted_string);
+            assert!(decrypted_string.is_ok());
+            assert_eq!(string, decrypted_string.unwrap());
+        }
+    }
 }
