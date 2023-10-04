@@ -96,10 +96,6 @@ impl AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        if self.cause.is_some() {
-            // TODO maybe logging
-        }
-
         let mut map = Map::new();
 
         map.insert("message".to_string(), Value::String(self.message.unwrap_or("unexpected error").to_string()));

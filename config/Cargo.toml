@@ -8,3 +8,5 @@ edition = "2021"
 dotenvy = { workspace = true }
 # Data Types
 types = { path = "../types" }
+# Observability
+tracing = { workspace = true }
