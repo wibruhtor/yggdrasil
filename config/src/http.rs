@@ -2,6 +2,7 @@ use std::env;
 
 use types::error::AppResult;
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct HttpConfig {
     host: String,
     port: String,

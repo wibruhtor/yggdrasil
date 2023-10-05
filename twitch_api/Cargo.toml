@@ -1,8 +1,18 @@
 [package]
 name = "twitch"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+# System
+reqwest = { workspace = true }
+# Serde
+serde = { workspace = true }
+# Data Types
+chrono = { workspace = true }
+config = { path = "../config" }
+types = { path = "../types" }
+# Web
+axum = { workspace = true }
+# Observability
+tracing = { workspace = true }

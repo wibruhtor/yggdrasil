@@ -1,11 +1,10 @@
+pub use crypt::*;
+pub use database::*;
+pub use http::*;
+pub use jwt::*;
+pub use logging::*;
+pub use twitch::*;
 use types::error::AppResult;
-
-use crate::crypt::CryptConfig;
-use crate::database::DatabaseConfig;
-use crate::http::HttpConfig;
-use crate::jwt::JwtConfig;
-use crate::logging::LoggingConfig;
-use crate::twitch::TwitchConfig;
 
 mod logging;
 mod jwt;
@@ -28,7 +27,7 @@ impl Config {
     pub fn load() -> AppResult<Self> {
         let span = tracing::debug_span!("load config");
         let _span = span.enter();
-        
+
         match dotenvy::dotenv() {
             Ok(_) => {}
             Err(e) => {
