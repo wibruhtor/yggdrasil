@@ -119,7 +119,7 @@ impl<E> From<E> for AppError
         E: Into<Error>,
 {
     fn from(err: E) -> Self {
-        AppError::new(StatusCode::INTERNAL_SERVER_ERROR).cause(err.into())
+        AppError::UNEXPECTED_ERROR.clone().cause(err.into())
     }
 }
 
