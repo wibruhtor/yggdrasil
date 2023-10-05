@@ -30,3 +30,37 @@ impl HttpConfig {
         return &self.allow_origin;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::env;
+
+    use fake::{Dummy, Fake, Faker};
+
+    use crate::HttpConfig;
+
+    #[derive(Debug, Dummy)]
+    #[allow(dead_code)]
+    struct TestData {
+        host: String,
+        port: String,
+        allow_origin: String,
+    }
+
+    #[test]
+    fn load() {
+        for _ in 1..100 {
+            let data = Faker.fake::<TestData>();
+            env::set_var("HTTP_HOST", &data.host);
+            env::set_var("HTTP_PORT", &data.port);
+            env::set_var("HTTP_ALLOW_ORIGIN", &data.allow_origin);
+
+            let config = HttpConfig::load();
+            assert!(config.is_ok());
+            let config = config.unwrap();
+            assert_eq!(config.host, data.host);
+            assert_eq!(config.port, data.port);
+            assert_eq!(config.allow_origin, data.allow_origin);
+        }
+    }
+}

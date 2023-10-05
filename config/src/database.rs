@@ -18,3 +18,31 @@ impl DatabaseConfig {
         return &self.postgres_url;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::env;
+
+    use fake::{Dummy, Fake, Faker};
+
+    use crate::DatabaseConfig;
+
+    #[derive(Debug, Dummy)]
+    #[allow(dead_code)]
+    struct TestData {
+        postgres_url: String,
+    }
+
+    #[test]
+    fn load() {
+        for _ in 1..100 {
+            let data = Faker.fake::<TestData>();
+            env::set_var("DATABASE_URL", &data.postgres_url);
+
+            let config = DatabaseConfig::load();
+            assert!(config.is_ok());
+            let config = config.unwrap();
+            assert_eq!(config.postgres_url, data.postgres_url);
+        }
+    }
+}

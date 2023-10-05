@@ -10,3 +10,6 @@ dotenvy = { workspace = true }
 types = { path = "../types" }
 # Observability
 tracing = { workspace = true }
+
+[dev-dependencies]
+fake = { workspace = true }

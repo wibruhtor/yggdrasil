@@ -272,6 +272,7 @@ name = "config"
 version = "1.0.0"
 dependencies = [
  "dotenvy",
+ "fake",
  "tracing",
  "types",
 ]
