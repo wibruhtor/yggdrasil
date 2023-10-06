@@ -50,12 +50,12 @@ impl TwitchApi {
         let response = request.send()
             .await
             .map_err(|e| {
-                TwitchApi::FAIL_GET_USER_INFO.clone().cause(e.into())
+                TwitchApi::FAIL_GET_USER_INFO_ERROR.clone().cause(e.into())
             })?;
 
         if !response.status().is_success() {
             return Err(
-                TwitchApi::FAIL_WITH_STATUS_CODE.clone().message(&format!(
+                TwitchApi::FAIL_REQUEST_WITH_STATUS_CODE_ERROR.clone().message(&format!(
                     "fail get user info with status code: {}",
                     response.status().as_u16()
                 ))
@@ -66,7 +66,7 @@ impl TwitchApi {
 
         match get_user_info_response.data.first() {
             Some(info) => Ok(info.clone()),
-            None => Err(TwitchApi::NOT_FOUND_USER_INFO)
+            None => Err(TwitchApi::NOT_FOUND_USER_INFO_ERROR)
         }
     }
 
@@ -76,12 +76,12 @@ impl TwitchApi {
         let response = request.send()
             .await
             .map_err(|e| {
-                TwitchApi::FAIL_GET_GLOBAL_EMOTES.clone().cause(e.into())
+                TwitchApi::FAIL_GET_GLOBAL_EMOTES_ERROR.clone().cause(e.into())
             })?;
 
         if !response.status().is_success() {
             return Err(
-                TwitchApi::FAIL_WITH_STATUS_CODE.clone().message(&format!(
+                TwitchApi::FAIL_REQUEST_WITH_STATUS_CODE_ERROR.clone().message(&format!(
                     "fail get global emotes with status code: {}",
                     response.status().as_u16()
                 ))
@@ -105,12 +105,12 @@ impl TwitchApi {
         let response = request.send()
             .await
             .map_err(|e| {
-                TwitchApi::FAIL_GET_CHANNEL_EMOTES.clone().cause(e.into())
+                TwitchApi::FAIL_GET_CHANNEL_EMOTES_ERROR.clone().cause(e.into())
             })?;
 
         if !response.status().is_success() {
             return Err(
-                TwitchApi::FAIL_WITH_STATUS_CODE.clone().message(&format!(
+                TwitchApi::FAIL_REQUEST_WITH_STATUS_CODE_ERROR.clone().message(&format!(
                     "fail get channel emotes with status code: {}",
                     response.status().as_u16()
                 ))
@@ -130,12 +130,12 @@ impl TwitchApi {
         let response = request.send()
             .await
             .map_err(|e| {
-                TwitchApi::FAIL_GET_GLOBAL_BADGES.clone().cause(e.into())
+                TwitchApi::FAIL_GET_GLOBAL_BADGES_ERROR.clone().cause(e.into())
             })?;
 
         if !response.status().is_success() {
             return Err(
-                TwitchApi::FAIL_WITH_STATUS_CODE.clone().message(&format!(
+                TwitchApi::FAIL_REQUEST_WITH_STATUS_CODE_ERROR.clone().message(&format!(
                     "fail get global badges with status code: {}",
                     response.status().as_u16()
                 ))
@@ -159,12 +159,12 @@ impl TwitchApi {
         let response = request.send()
             .await
             .map_err(|e| {
-                TwitchApi::FAIL_GET_CHANNEL_BADGES.clone().cause(e.into())
+                TwitchApi::FAIL_GET_CHANNEL_BADGES_ERROR.clone().cause(e.into())
             })?;
 
         if !response.status().is_success() {
             return Err(
-                TwitchApi::FAIL_WITH_STATUS_CODE.clone().message(&format!(
+                TwitchApi::FAIL_REQUEST_WITH_STATUS_CODE_ERROR.clone().message(&format!(
                     "fail get channel badges with status code: {}",
                     response.status().as_u16()
                 ))
@@ -199,12 +199,12 @@ impl TwitchApi {
         let request = client.post(TOKEN_URL).form(&form);
 
         let response = request.send().await.map_err(|e| {
-            TwitchApi::FAIL_GET_USER_TOKEN.clone().cause(e.into())
+            TwitchApi::FAIL_GET_USER_TOKEN_ERROR.clone().cause(e.into())
         })?;
 
         if !response.status().is_success() {
             return Err(
-                TwitchApi::FAIL_WITH_STATUS_CODE.clone().message(&format!(
+                TwitchApi::FAIL_REQUEST_WITH_STATUS_CODE_ERROR.clone().message(&format!(
                     "fail get user token with status code: {}",
                     response.status().as_u16()
                 ))
@@ -224,12 +224,12 @@ impl TwitchApi {
         let response = request.send()
             .await
             .map_err(|e| {
-                TwitchApi::FAIL_GET_USER_INFO.clone().cause(e.into())
+                TwitchApi::FAIL_GET_USER_INFO_ERROR.clone().cause(e.into())
             })?;
 
         if !response.status().is_success() {
             return Err(
-                TwitchApi::FAIL_WITH_STATUS_CODE.clone().message(&format!(
+                TwitchApi::FAIL_REQUEST_WITH_STATUS_CODE_ERROR.clone().message(&format!(
                     "fail get user info by access token with status code: {}",
                     response.status().as_u16()
                 ))
@@ -240,7 +240,7 @@ impl TwitchApi {
 
         match get_user_info_response.data.first() {
             Some(info) => Ok(info.clone()),
-            None => Err(TwitchApi::NOT_FOUND_USER_INFO)
+            None => Err(TwitchApi::NOT_FOUND_USER_INFO_ERROR)
         }
     }
 
@@ -260,12 +260,12 @@ impl TwitchApi {
         let request = client.post(TOKEN_URL).form(&form);
 
         let response = request.send().await.map_err(|e| {
-            TwitchApi::FAIL_GET_APP_ACCESS_TOKEN.clone().cause(e.into())
+            TwitchApi::FAIL_GET_APP_ACCESS_TOKEN_ERROR.clone().cause(e.into())
         })?;
 
         if !response.status().is_success() {
             return Err(
-                TwitchApi::FAIL_WITH_STATUS_CODE.clone().message(&format!(
+                TwitchApi::FAIL_REQUEST_WITH_STATUS_CODE_ERROR.clone().message(&format!(
                     "fail get app access token with status code: {}",
                     response.status().as_u16()
                 ))
@@ -287,7 +287,7 @@ impl TwitchApi {
         response.json::<T>()
             .await
             .map_err(|e| {
-                TwitchApi::FAIL_PARSE_JSON_OF_RESPONSE.clone().cause(e.into())
+                TwitchApi::FAIL_PARSE_JSON_OF_RESPONSE_ERROR.clone().cause(e.into())
             })
     }
 
@@ -331,15 +331,15 @@ macro_rules! twitch_api_errors {
 }
 
 twitch_api_errors! {
-    (FAIL_GET_APP_ACCESS_TOKEN, StatusCode::INTERNAL_SERVER_ERROR, "fail get app access token");
-    (FAIL_GET_USER_INFO, StatusCode::INTERNAL_SERVER_ERROR, "fail get user info");
-    (NOT_FOUND_USER_INFO, StatusCode::NOT_FOUND, "not found user info");
-    (FAIL_GET_GLOBAL_EMOTES, StatusCode::INTERNAL_SERVER_ERROR, "fail get global emotes");
-    (FAIL_GET_CHANNEL_EMOTES, StatusCode::INTERNAL_SERVER_ERROR, "fail get channel emotes");
-    (FAIL_GET_GLOBAL_BADGES, StatusCode::INTERNAL_SERVER_ERROR, "fail get global badges");
-    (FAIL_GET_CHANNEL_BADGES, StatusCode::INTERNAL_SERVER_ERROR, "fail get channel badges");
-    (FAIL_GET_USER_TOKEN, StatusCode::INTERNAL_SERVER_ERROR, "fail get user token");
-    (FAIL_WITH_STATUS_CODE, StatusCode::INTERNAL_SERVER_ERROR, "");
-    (FAIL_PARSE_JSON_OF_RESPONSE, StatusCode::INTERNAL_SERVER_ERROR, "fail parse json of response");
-    (FAIL_PARSE_URL, StatusCode::INTERNAL_SERVER_ERROR, "fail parse url");
+    (FAIL_GET_APP_ACCESS_TOKEN_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail get app access token");
+    (FAIL_GET_USER_INFO_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail get user info");
+    (NOT_FOUND_USER_INFO_ERROR, StatusCode::NOT_FOUND, "not found user info");
+    (FAIL_GET_GLOBAL_EMOTES_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail get global emotes");
+    (FAIL_GET_CHANNEL_EMOTES_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail get channel emotes");
+    (FAIL_GET_GLOBAL_BADGES_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail get global badges");
+    (FAIL_GET_CHANNEL_BADGES_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail get channel badges");
+    (FAIL_GET_USER_TOKEN_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail get user token");
+    (FAIL_REQUEST_WITH_STATUS_CODE_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail request");
+    (FAIL_PARSE_JSON_OF_RESPONSE_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail parse json of response");
+    (FAIL_PARSE_URL_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail parse url");
 }

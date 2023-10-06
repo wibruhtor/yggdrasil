@@ -119,7 +119,7 @@ impl<E> From<E> for AppError
         E: Into<Error>,
 {
     fn from(err: E) -> Self {
-        AppError::UNEXPECTED_ERROR.clone().cause(err.into())
+        AppError::UNEXPECTED.clone().cause(err.into())
     }
 }
 
@@ -138,7 +138,7 @@ impl Display for AppError {
 
 impl Default for AppError {
     fn default() -> Self {
-        AppError::UNEXPECTED_ERROR.clone()
+        AppError::UNEXPECTED.clone()
     }
 }
 
@@ -176,5 +176,5 @@ macro_rules! app_errors {
 }
 
 app_errors! {
-    (UNEXPECTED_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "unexpected error");
+    (UNEXPECTED, StatusCode::INTERNAL_SERVER_ERROR, "unexpected error");
 }

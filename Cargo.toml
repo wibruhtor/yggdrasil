@@ -32,5 +32,14 @@ axum = { version = "0.6", features = ["tokio", "json", "headers"] }
 magic-crypt = "3.1"
 # Observability
 tracing = "0.1"
+# Database
+sqlx = { version = "0.7", features = [
+    "runtime-tokio",
+    "postgres",
+    "migrate",
+    "uuid",
+    "json",
+    "chrono",
+] }
 # Testing
 fake = { version = "2.8", features = ["derive", "serde_json", "chrono", "uuid"] }

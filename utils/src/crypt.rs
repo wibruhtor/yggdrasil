@@ -24,13 +24,13 @@ impl Crypt {
 
     pub fn decrypt(&self, data: &[u8]) -> AppResult<Vec<u8>> {
         self.cipher.decrypt_bytes_to_bytes(data).map_err(|e| {
-            Crypt::FAIL_DECRYPT_BYTES.clone().cause(e.into())
+            Crypt::FAIL_DECRYPT_BYTES_ERROR.clone().cause(e.into())
         })
     }
 
     pub fn decrypt_str(&self, data: &str) -> AppResult<String> {
         self.cipher.decrypt_base64_to_string(data).map_err(|e| {
-            Crypt::FAIL_DECRYPT_STRING.clone().cause(e.into())
+            Crypt::FAIL_DECRYPT_STRING_ERROR.clone().cause(e.into())
         })
     }
 }
@@ -57,8 +57,8 @@ macro_rules! crypt_errors {
 }
 
 crypt_errors! {
-    (FAIL_DECRYPT_BYTES, StatusCode::INTERNAL_SERVER_ERROR, "fail decrypt bytes");
-    (FAIL_DECRYPT_STRING, StatusCode::INTERNAL_SERVER_ERROR, "fail decrypt string");
+    (FAIL_DECRYPT_BYTES_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail decrypt bytes");
+    (FAIL_DECRYPT_STRING_ERROR, StatusCode::INTERNAL_SERVER_ERROR, "fail decrypt string");
 }
 
 #[cfg(test)]
