@@ -1,8 +1,20 @@
 [package]
 name = "web_server"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+# Internal
+config = { workspace = true }
+service = { workspace = true }
+types = { workspace = true }
+# Serde
+serde = { workspace = true }
+serde_json = { workspace = true }
+# Axum
+axum = { workspace = true }
+# Observability
+tracing = { workspace = true }
+# Utilities
+tokio = { workspace = true }
+

@@ -7,6 +7,7 @@ use twitch_api::TwitchApi;
 use types::error::AppResult;
 use utils::crypt::Crypt;
 use utils::jwt::JwtMaker;
+use web_server::Services;
 
 #[tokio::main]
 async fn main() -> AppResult {
@@ -25,18 +26,29 @@ async fn main() -> AppResult {
 
     let twitch_api = Arc::new(TwitchApi::new(config.twitch_config().clone()));
 
-    let auth_service = AuthService::new(
+    let auth_service = Arc::new(AuthService::new(
         config.twitch_config().clone(),
         jwt,
         Arc::clone(&twitch_api),
         Arc::clone(&user_dao),
         Arc::clone(&twitch_data_dao),
         Arc::clone(&token_dao),
-    );
+    ));
     let session_service = Arc::new(SessionService::new(Arc::clone(&token_dao)));
     let twitch_service = Arc::new(TwitchService::new(Arc::clone(&twitch_api)));
     let ban_word_service = Arc::new(BanWordService::new(Arc::clone(&ban_word_filter_dao)));
     let chat_service = Arc::new(ChatService::new(Arc::clone(&chat_settings_dao)));
 
+    web_server::run(
+        config.http_config().clone(),
+        Services {
+            auth: auth_service,
+            session: session_service,
+            twitch: twitch_service,
+            ban_word: ban_word_service,
+            chat: chat_service,
+        },
+    )
+    .await;
     Ok(())
 }

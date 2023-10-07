@@ -11,5 +11,6 @@ service = { workspace = true }
 twitch_api = { workspace = true }
 types = { workspace = true }
 utils = { workspace = true }
+web_server = { workspace = true }
 # Utilities
 tokio = { workspace = true }

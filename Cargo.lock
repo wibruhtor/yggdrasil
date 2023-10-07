@@ -88,6 +88,7 @@ dependencies = [
  "twitch_api",
  "types",
  "utils",
+ "web_server",
 ]
 
 [[package]]
@@ -2433,7 +2434,6 @@ dependencies = [
  "config",
  "reqwest",
  "serde",
- "tracing",
  "types",
 ]
 
@@ -2689,7 +2689,17 @@ dependencies = [
 
 [[package]]
 name = "web_server"
-version = "0.1.0"
+version = "1.0.0"
+dependencies = [
+ "axum",
+ "config",
+ "serde",
+ "serde_json",
+ "service",
+ "tokio",
+ "tracing",
+ "types",
+]
 
 [[package]]
 name = "whoami"
