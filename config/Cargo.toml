@@ -4,12 +4,13 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-# System
-dotenvy = { workspace = true }
-# Data Types
-types = { path = "../types" }
+# Internal
+types = { workspace = true }
 # Observability
 tracing = { workspace = true }
+# Utilities
+dotenvy = { workspace = true }
 
 [dev-dependencies]
+# Testing
 fake = { workspace = true }

@@ -4,15 +4,16 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-# System
-reqwest = { workspace = true }
+# Internal
+config = { workspace = true }
+types = { workspace = true }
 # Serde
 serde = { workspace = true }
-# Data Types
+# Types
 chrono = { workspace = true }
-config = { path = "../config" }
-types = { path = "../types" }
-# Web
+# Axum
 axum = { workspace = true }
 # Observability
 tracing = { workspace = true }
+# Utilities
+reqwest = { workspace = true }

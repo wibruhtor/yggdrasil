@@ -1739,7 +1739,6 @@ dependencies = [
  "anyhow",
  "axum",
  "chrono",
- "fake",
  "jsonwebtoken",
  "magic-crypt",
  "rand",

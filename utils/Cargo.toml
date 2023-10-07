@@ -4,22 +4,19 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-# System
-anyhow = { workspace = true }
-rand = { workspace = true }
+# Internal
+types = { workspace = true }
 # Serde
 serde = { workspace = true }
-# Validation
-validator = { workspace = true }
-# Data Types
+# Types
 chrono = { workspace = true }
 uuid = { workspace = true }
-types = { path = "../types" }
-jsonwebtoken = { workspace = true }
-# Web
+# Axum
 axum = { workspace = true }
-# Crypt
+# Security
+jsonwebtoken = { workspace = true }
 magic-crypt = { workspace = true }
-
-[dev-dependencies]
-fake = { workspace = true }
+validator = { workspace = true }
+# Utilities
+anyhow = { workspace = true }
+rand = { workspace = true }

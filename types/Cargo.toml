@@ -4,15 +4,15 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-# System
-anyhow = { workspace = true }
 # Serde
 serde = { workspace = true }
 serde_json = { workspace = true }
-# Validation
-validator = { workspace = true }
-# Data Types
+# Types
 chrono = { workspace = true }
 uuid = { workspace = true }
-# Web
+# Axum
 axum = { workspace = true }
+# Security
+validator = { workspace = true }
+# Utilities
+anyhow = { workspace = true }
