@@ -6,15 +6,8 @@ edition = "2021"
 [dependencies]
 # Internal
 config = { workspace = true }
-dao = { workspace = true }
-service = { workspace = true }
-twitch_api = { workspace = true }
 types = { workspace = true }
 utils = { workspace = true }
-web_server = { workspace = true }
-# Serde
-serde = { workspace = true }
-serde_json = { workspace = true }
 # Types
 chrono = { workspace = true }
 uuid = { workspace = true }
@@ -22,16 +15,3 @@ uuid = { workspace = true }
 axum = { workspace = true }
 # Database
 sqlx = { workspace = true }
-# Security
-jsonwebtoken = { workspace = true }
-magic-crypt = { workspace = true }
-validator = { workspace = true }
-# Observability
-tracing = { workspace = true }
-# Testing
-fake = { workspace = true }
-# Utilities
-dotenvy = { workspace = true }
-anyhow = { workspace = true }
-rand = { workspace = true }
-reqwest = { workspace = true }

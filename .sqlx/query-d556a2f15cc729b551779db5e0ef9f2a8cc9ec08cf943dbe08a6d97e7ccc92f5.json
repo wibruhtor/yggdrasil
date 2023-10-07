@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT f.id, f.name, array_agg(b.word) as ban_words, f.user_id FROM ban_word_filters as f INNER JOIN ban_words as b on f.id = b.ban_word_filter_id WHERE f.id = $1 GROUP by f.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "ban_words",
+        "type_info": "VarcharArray"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "d556a2f15cc729b551779db5e0ef9f2a8cc9ec08cf943dbe08a6d97e7ccc92f5"
+}

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO chat_custom_nicknames (chat_settings_id, nickname, start_color, end_color) SELECT $1, * FROM unnest($2::varchar[], $3::bigint[], $4::bigint[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "VarcharArray",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d860a428af96f4decc6115985afbc6ab4f5d2360d70dc6eddcc97f4ad9aeee37"
+}

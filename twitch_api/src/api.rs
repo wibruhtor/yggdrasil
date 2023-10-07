@@ -299,7 +299,7 @@ impl TwitchApi {
         let url = match query_params {
             Some(params) => Url::parse_with_params(&url, params),
             None => Url::parse(&url),
-        };
+        }?;
         let access_token = self.get_app_access_token().await?;
 
         let client = Client::new();

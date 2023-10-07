@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 pub struct Scope(&'static str);
 
 impl Scope {

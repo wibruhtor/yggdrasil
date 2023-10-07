@@ -15,3 +15,27 @@ pub enum ChatType {
     #[serde(rename = "alternative-block-reverse")]
     AlternativeBlockReverse,
 }
+
+impl ChatType {
+    pub fn from_str(chat_type: &str) -> ChatType {
+        match chat_type {
+            "default-reverse" => ChatType::DefaultReverse,
+            "block" => ChatType::Block,
+            "block-reverse" => ChatType::BlockReverse,
+            "alternative-block" => ChatType::AlternativeBlock,
+            "alternative-block-reverse" => ChatType::AlternativeBlockReverse,
+            _ => ChatType::Default,
+        }
+    }
+
+    pub fn to_str(&self) -> &str {
+        match *self {
+            ChatType::Default => "default",
+            ChatType::DefaultReverse => "default-reverse",
+            ChatType::Block => "block",
+            ChatType::BlockReverse => "block-reverse",
+            ChatType::AlternativeBlock => "alternative-block",
+            ChatType::AlternativeBlockReverse => "alternative-block-reverse",
+        }
+    }
+}

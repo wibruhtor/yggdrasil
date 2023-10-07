@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM chat_custom_nicknames WHERE chat_settings_id = $1 AND nickname = any($2::varchar[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "VarcharArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2f230d16af9b3bcc5f4373899b4c5459fbcc2b25a39a47af5a055b8a114a8bcf"
+}
