@@ -22,7 +22,8 @@ impl From<ValidationErrors> for ValidationErrorsWrapper {
 
 impl ValidationErrorsWrapper {
     fn to_error(&self) -> AppError {
-        ValidationErrorsWrapper::FAIL_VALIDATE.clone()
+        ValidationErrorsWrapper::FAIL_VALIDATE
+            .clone()
             .other_map(self.validation_error_to_map(&self.0))
     }
 

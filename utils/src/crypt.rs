@@ -1,5 +1,5 @@
 use axum::http::StatusCode;
-use magic_crypt::{MagicCrypt256, MagicCryptTrait, new_magic_crypt};
+use magic_crypt::{new_magic_crypt, MagicCrypt256, MagicCryptTrait};
 
 use types::error::{AppError, AppResult};
 
@@ -23,15 +23,15 @@ impl Crypt {
     }
 
     pub fn decrypt(&self, data: &[u8]) -> AppResult<Vec<u8>> {
-        self.cipher.decrypt_bytes_to_bytes(data).map_err(|e| {
-            Crypt::FAIL_DECRYPT_BYTES_ERROR.clone().cause(e.into())
-        })
+        self.cipher
+            .decrypt_bytes_to_bytes(data)
+            .map_err(|e| Crypt::FAIL_DECRYPT_BYTES_ERROR.clone().cause(e.into()))
     }
 
     pub fn decrypt_str(&self, data: &str) -> AppResult<String> {
-        self.cipher.decrypt_base64_to_string(data).map_err(|e| {
-            Crypt::FAIL_DECRYPT_STRING_ERROR.clone().cause(e.into())
-        })
+        self.cipher
+            .decrypt_base64_to_string(data)
+            .map_err(|e| Crypt::FAIL_DECRYPT_STRING_ERROR.clone().cause(e.into()))
     }
 }
 

@@ -12,7 +12,8 @@ pub struct GetEmotesResponse {
 
 impl GetEmotesResponse {
     pub fn to_twitch_emotes(&self) -> Vec<twitch::Emote> {
-        self.data.iter()
+        self.data
+            .iter()
             .map(|emote| emote.to_twitch_emote(&self.template))
             .collect()
     }

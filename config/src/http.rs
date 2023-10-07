@@ -14,7 +14,8 @@ impl HttpConfig {
         Ok(HttpConfig {
             host: env::var("HTTP_HOST").unwrap_or("0.0.0.0".to_string()),
             port: env::var("HTTP_PORT").unwrap_or("8000".to_string()),
-            allow_origin: env::var("HTTP_ALLOW_ORIGIN").unwrap_or("http://localhost:3000".to_string()),
+            allow_origin: env::var("HTTP_ALLOW_ORIGIN")
+                .unwrap_or("http://localhost:3000".to_string()),
         })
     }
 

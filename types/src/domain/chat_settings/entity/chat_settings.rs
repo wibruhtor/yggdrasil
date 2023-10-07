@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::domain::{ChatColorSettings, ChatFontSettings, ChatHideSettings, ChatSizeSettings, ChatType};
+use crate::domain::{
+    ChatColorSettings, ChatFontSettings, ChatHideSettings, ChatSizeSettings, ChatType,
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "camelCase")]

@@ -12,10 +12,9 @@ pub struct BadgeSet {
 
 impl BadgeSet {
     pub fn to_twitch_badges(&self) -> Vec<twitch::Badge> {
-        self.versions.iter()
-            .map(|badge| {
-                badge.to_twitch_badge(&self.set_id)
-            })
+        self.versions
+            .iter()
+            .map(|badge| badge.to_twitch_badge(&self.set_id))
             .collect()
     }
 }

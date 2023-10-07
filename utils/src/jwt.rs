@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use chrono::{Duration, NaiveDateTime};
-use jsonwebtoken::{Algorithm, decode, DecodingKey, encode, EncodingKey, Header, Validation};
 use jsonwebtoken::errors::ErrorKind;
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -36,12 +36,12 @@ impl JwtMaker {
             &DecodingKey::from_secret(&self.secret.as_bytes()),
             &self.validation,
         )
-            .map_err(|err| match *err.kind() {
-                ErrorKind::InvalidSignature => JwtMaker::INVALID_SIGNATURE_ERROR,
-                ErrorKind::InvalidToken => JwtMaker::INVALID_TOKEN_ERROR,
-                ErrorKind::ExpiredSignature => JwtMaker::EXPIRED_TOKEN_ERROR,
-                _ => JwtMaker::FAIL_VALIDATE_TOKEN_ERROR,
-            })?;
+        .map_err(|err| match *err.kind() {
+            ErrorKind::InvalidSignature => JwtMaker::INVALID_SIGNATURE_ERROR,
+            ErrorKind::InvalidToken => JwtMaker::INVALID_TOKEN_ERROR,
+            ErrorKind::ExpiredSignature => JwtMaker::EXPIRED_TOKEN_ERROR,
+            _ => JwtMaker::FAIL_VALIDATE_TOKEN_ERROR,
+        })?;
 
         Ok(token_data.claims)
     }
@@ -161,10 +161,10 @@ jwt_errors! {
 #[cfg(test)]
 pub mod tests {
     use chrono::{Duration, NaiveDateTime};
-    use fake::{Dummy, Fake, Faker, faker::name::en::Name};
+    use fake::{faker::name::en::Name, Dummy, Fake, Faker};
     use uuid::Uuid;
 
-    use crate::jwt::{ACCESS_TOKEN_TTL_IN_HOURS, JwtMaker, REFRESH_TOKEN_TTL_IN_DAYS, TokenType};
+    use crate::jwt::{JwtMaker, TokenType, ACCESS_TOKEN_TTL_IN_HOURS, REFRESH_TOKEN_TTL_IN_DAYS};
 
     #[derive(Debug, Dummy)]
     #[allow(dead_code)]
@@ -182,11 +182,17 @@ pub mod tests {
         for _ in 1..100 {
             let data = Faker.fake::<TestData>();
 
-            let expired_at = data.datetime.timestamp() + Duration::hours(ACCESS_TOKEN_TTL_IN_HOURS).num_seconds();
+            let expired_at = data.datetime.timestamp()
+                + Duration::hours(ACCESS_TOKEN_TTL_IN_HOURS).num_seconds();
 
             let jwt_maker = JwtMaker::new(&data.key);
 
-            let access_token_result = jwt_maker.generate_access_token(&data.token_id, &data.user_id, &data.username, &data.datetime);
+            let access_token_result = jwt_maker.generate_access_token(
+                &data.token_id,
+                &data.user_id,
+                &data.username,
+                &data.datetime,
+            );
             assert!(access_token_result.is_ok());
             let (access_token, claims) = access_token_result.unwrap();
 
@@ -205,11 +211,17 @@ pub mod tests {
         for _ in 1..100 {
             let data = Faker.fake::<TestData>();
 
-            let expired_at = data.datetime.timestamp() + Duration::days(REFRESH_TOKEN_TTL_IN_DAYS).num_seconds();
+            let expired_at =
+                data.datetime.timestamp() + Duration::days(REFRESH_TOKEN_TTL_IN_DAYS).num_seconds();
 
             let jwt_maker = JwtMaker::new(&data.key);
 
-            let refresh_token_result = jwt_maker.generate_refresh_token(&data.token_id, &data.user_id, &data.username, &data.datetime);
+            let refresh_token_result = jwt_maker.generate_refresh_token(
+                &data.token_id,
+                &data.user_id,
+                &data.username,
+                &data.datetime,
+            );
             assert!(refresh_token_result.is_ok());
             let (refresh_token, claims) = refresh_token_result.unwrap();
 

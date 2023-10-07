@@ -7,9 +7,9 @@ pub use chat_size_settings::*;
 pub use chat_type::*;
 pub use custom_nickname::*;
 
+mod chat_color_settings;
 mod chat_font_settings;
 mod chat_hide_settings;
-mod chat_color_settings;
 mod chat_settings;
 mod chat_settings_info;
 mod chat_size_settings;

@@ -6,12 +6,12 @@ pub use logging::*;
 pub use twitch::*;
 use types::error::AppResult;
 
-mod logging;
-mod jwt;
 mod crypt;
-mod twitch;
 mod database;
 mod http;
+mod jwt;
+mod logging;
+mod twitch;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Config {
