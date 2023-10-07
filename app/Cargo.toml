@@ -7,6 +7,9 @@ edition = "2021"
 # Internal
 config = { workspace = true }
 dao = { workspace = true }
+service = { workspace = true }
+twitch_api = { workspace = true }
 types = { workspace = true }
+utils = { workspace = true }
 # Utilities
 tokio = { workspace = true }

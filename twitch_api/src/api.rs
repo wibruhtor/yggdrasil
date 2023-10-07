@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::ops::Add;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 use axum::http::StatusCode;
 use chrono::{Duration, Utc};
@@ -18,12 +18,12 @@ use crate::domain::{
 };
 
 pub struct TwitchApi {
-    twitch_config: Arc<&'static TwitchConfig>,
+    twitch_config: TwitchConfig,
     token: RwLock<AppAccessToken>,
 }
 
 impl TwitchApi {
-    pub fn new(twitch_config: Arc<&'static TwitchConfig>) -> Self {
+    pub fn new(twitch_config: TwitchConfig) -> Self {
         TwitchApi {
             twitch_config,
             token: RwLock::default(),

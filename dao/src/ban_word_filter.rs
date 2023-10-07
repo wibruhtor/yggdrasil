@@ -4,7 +4,7 @@ use axum::http::StatusCode;
 use sqlx::{PgConnection, Pool, Postgres};
 use uuid::Uuid;
 
-use types::domain::{BanWordFilter, BanWordFilterInfo};
+use types::domain::{BanWordFilter, BanWordFilterInfo, UpdateBanWordFilter};
 use types::error::{AppError, AppResult};
 
 pub struct BanWordFilterDao {
@@ -89,8 +89,7 @@ impl BanWordFilterDao {
     pub async fn update(
         &self,
         id: &Uuid,
-        name: &str,
-        ban_words: &Vec<String>,
+        update_ban_word_filter: &UpdateBanWordFilter,
     ) -> AppResult<BanWordFilter> {
         let previous_ban_words = self.ban_words(id).await?;
 
@@ -102,7 +101,7 @@ impl BanWordFilterDao {
 
         // region: create ban words
         let mut to_create_ban_words: Vec<String> = Vec::new();
-        for ban_word in ban_words.clone() {
+        for ban_word in update_ban_word_filter.ban_words.clone() {
             if !previous_ban_words.contains(&ban_word) {
                 to_create_ban_words.push(ban_word.clone());
             }
@@ -116,7 +115,7 @@ impl BanWordFilterDao {
         // region: delete ban words
         let mut to_delete_ban_words: Vec<String> = Vec::new();
         for ban_word in previous_ban_words {
-            if !ban_words.contains(&ban_word) {
+            if !update_ban_word_filter.ban_words.contains(&ban_word) {
                 to_delete_ban_words.push(ban_word.clone());
             }
         }
@@ -129,7 +128,7 @@ impl BanWordFilterDao {
         let raw_ban_word_filter = sqlx::query_as!(
             RawBanWordFilter,
             r#"with f as (UPDATE ban_word_filters SET name = $1 WHERE id = $2 RETURNING id, name, user_id) select f.id, f.name, array_agg(word) as ban_words, f.user_id from ban_words INNER JOIN f ON ban_words.ban_word_filter_id = f.id where ban_words.ban_word_filter_id = f.id GROUP BY f.id, f.name, f.user_id"#,
-            name,
+            update_ban_word_filter.name,
             id,
         )
             .fetch_one(&mut *tx)

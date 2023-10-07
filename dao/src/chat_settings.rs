@@ -84,7 +84,7 @@ impl ChatSettingsDao {
         Ok(chat_settings)
     }
 
-    pub async fn get_all_info_by_user_id(&self, user_id: &str) -> AppResult<Vec<ChatSettingsInfo>> {
+    pub async fn get_all_by_user_id(&self, user_id: &str) -> AppResult<Vec<ChatSettingsInfo>> {
         let raw_chat_settings_infos = sqlx::query_as!(
             RawChatSettingsInfo,
             r#"SELECT id, name, chat_type, user_id FROM chat_settings WHERE user_id = $1"#,

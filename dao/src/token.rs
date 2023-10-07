@@ -11,11 +11,11 @@ use utils::crypt::Crypt;
 
 pub struct TokenDao {
     pool: Arc<Pool<Postgres>>,
-    crypt: Arc<Crypt>,
+    crypt: Crypt,
 }
 
 impl TokenDao {
-    pub fn new(pool: Arc<Pool<Postgres>>, crypt: Arc<Crypt>) -> Self {
+    pub fn new(pool: Arc<Pool<Postgres>>, crypt: Crypt) -> Self {
         TokenDao { pool, crypt }
     }
 

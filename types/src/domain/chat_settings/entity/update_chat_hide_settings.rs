@@ -10,12 +10,12 @@ pub struct UpdateChatHideSettings {
     pub hide_links: bool,
     pub link_replacement: String,
     pub ban_word_replacement: String,
-    #[validate(custom(function = "vec_string_max_len::<4, 25>"))]
+    #[validate(custom(function = "nickname_vec::<4, 25>"))]
     pub nicknames: Vec<String>,
     pub ban_word_filter_id: Option<Uuid>,
 }
 
-fn vec_string_max_len<const MIN: usize, const MAX: usize>(
+fn nickname_vec<const MIN: usize, const MAX: usize>(
     value: &Vec<String>,
 ) -> Result<(), ValidationError> {
     for s in value.iter() {
