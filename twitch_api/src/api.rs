@@ -174,7 +174,9 @@ impl TwitchApi {
 
     pub async fn exchange_code(&self, code: &str) -> AppResult<(GetUserTokenResponse, UserInfo)> {
         let response = self.get_user_token(code).await?;
-        let user_info = self.get_user_info(&response.access_token).await?;
+        let user_info = self
+            .get_user_info_by_user_token(&response.access_token)
+            .await?;
 
         Ok((response, user_info))
     }

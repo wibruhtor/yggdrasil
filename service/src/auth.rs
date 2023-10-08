@@ -2,14 +2,12 @@ use std::sync::Arc;
 
 use uuid::Uuid;
 
-use config::TwitchConfig;
 use dao::{TokenDao, TwitchDataDao, UserDao};
 use twitch_api::{Scope, TwitchApi};
 use types::error::AppResult;
 use utils::jwt::{Claims, JwtMaker};
 
 pub struct AuthService {
-    twitch_config: TwitchConfig,
     jwt: JwtMaker,
     twitch_api: Arc<TwitchApi>,
     user_dao: Arc<UserDao>,
@@ -20,7 +18,6 @@ pub struct AuthService {
 
 impl AuthService {
     pub fn new(
-        twitch_config: TwitchConfig,
         jwt: JwtMaker,
         twitch_api: Arc<TwitchApi>,
         user_dao: Arc<UserDao>,
@@ -28,7 +25,6 @@ impl AuthService {
         token_dao: Arc<TokenDao>,
     ) -> Self {
         AuthService {
-            twitch_config,
             jwt,
             twitch_api,
             user_dao,

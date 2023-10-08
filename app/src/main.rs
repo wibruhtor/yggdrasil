@@ -27,7 +27,6 @@ async fn main() -> AppResult {
     let twitch_api = Arc::new(TwitchApi::new(config.twitch_config().clone()));
 
     let auth_service = Arc::new(AuthService::new(
-        config.twitch_config().clone(),
         jwt,
         Arc::clone(&twitch_api),
         Arc::clone(&user_dao),
