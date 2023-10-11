@@ -17,6 +17,8 @@ axum = { workspace = true }
 jsonwebtoken = { workspace = true }
 magic-crypt = { workspace = true }
 validator = { workspace = true }
+# Observability
+tracing = { workspace = true }
 # Utilities
 anyhow = { workspace = true }
 rand = { workspace = true }

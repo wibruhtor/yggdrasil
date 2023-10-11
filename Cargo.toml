@@ -28,6 +28,9 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.4", features = ["v4", "fast-rng", "serde"] }
 # Axum
 axum = { version = "0.6", features = ["tokio", "json", "headers"] }
+axum-client-ip = "0.4"
+tower = "0.4"
+tower-service = "0.3"
 # Database
 sqlx = { version = "0.7", features = [
     "runtime-tokio",
@@ -43,6 +46,12 @@ magic-crypt = "3.1"
 validator = { version = "0.16", features = ["derive"] }
 # Observability
 tracing = "0.1"
+tracing-opentelemetry = "0.21"
+tracing-opentelemetry-instrumentation-sdk = "0.14"
+opentelemetry = "0.20"
+opentelemetry_api = "0.20"
+axum-tracing-opentelemetry = "0.14"
+init-tracing-opentelemetry = { version = "0.14", features = ["tracing_subscriber_ext", "stdout"] }
 # Testing
 fake = { version = "2.8", features = ["derive", "serde_json", "chrono", "uuid"] }
 # Utilities
@@ -51,3 +60,5 @@ anyhow = "1.0"
 rand = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1.32", features = ["full"] }
+futures-util = "0.3"
+pin-project = "1.1"

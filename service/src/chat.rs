@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use axum::http::StatusCode;
+use tracing::instrument;
 use uuid::Uuid;
 
 use dao::ChatSettingsDao;
@@ -16,6 +17,7 @@ impl ChatService {
         ChatService { chat_settings_dao }
     }
 
+    #[instrument(skip(self))]
     pub async fn create_chat_settings(
         &self,
         user_id: &str,
@@ -27,14 +29,17 @@ impl ChatService {
             .await
     }
 
+    #[instrument(skip(self))]
     pub async fn get_chat_settings(&self, chat_settings_id: &Uuid) -> AppResult<ChatSettings> {
         self.chat_settings_dao.get(chat_settings_id).await
     }
 
+    #[instrument(skip(self))]
     pub async fn get_all_chat_settings(&self, user_id: &str) -> AppResult<Vec<ChatSettingsInfo>> {
         self.chat_settings_dao.get_all_by_user_id(user_id).await
     }
 
+    #[instrument(skip(self))]
     pub async fn update_chat_settings(
         &self,
         user_id: &str,
@@ -49,6 +54,7 @@ impl ChatService {
             .await
     }
 
+    #[instrument(skip(self))]
     pub async fn delete_chat_settings(&self, user_id: &str, chat_settings_id: &Uuid) -> AppResult {
         self.check_user_owning_of_chat_settings_by_id(user_id, chat_settings_id)
             .await?;
@@ -56,6 +62,7 @@ impl ChatService {
         self.chat_settings_dao.delete(chat_settings_id).await
     }
 
+    #[instrument(skip(self))]
     async fn check_user_owning_of_chat_settings_by_id(
         &self,
         user_id: &str,

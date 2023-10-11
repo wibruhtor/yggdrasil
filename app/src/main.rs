@@ -12,6 +12,7 @@ use web_server::Services;
 #[tokio::main]
 async fn main() -> AppResult {
     let config = Config::load()?;
+    init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers()?;
 
     let jwt = JwtMaker::new(config.jwt_config().secret());
     let crypt = Crypt::new(config.crypt_config().secret());

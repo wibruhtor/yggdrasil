@@ -13,8 +13,18 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 # Axum
 axum = { workspace = true }
+axum-client-ip = { workspace = true }
+tower = { workspace = true }
+tower-service = { workspace = true }
 # Observability
 tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
+tracing-opentelemetry-instrumentation-sdk = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry_api = { workspace = true }
+axum-tracing-opentelemetry = { workspace = true }
 # Utilities
 tokio = { workspace = true }
+futures-util = { workspace = true }
+pin-project = { workspace = true }
 

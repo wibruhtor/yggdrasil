@@ -3,8 +3,9 @@ services:
     image: postgres:15
     container_name: wibruhtor-postgres-dev
     restart: on-failure
+    user: postgres
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
+      test: [ "CMD-SHELL", "pg_isready", "-U", "$POSTGRES_USER", "-d", "$POSTGRES_DB" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -16,6 +17,14 @@ services:
       POSTGRES_PASSWORD: secret-password
     networks:
       - wibruhtor_network
+  otel:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: wibruhtor-otel-collector
+    restart: on-failure
+    ports:
+      - 4317:4317
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
 
 networks:
   wibruhtor_network:

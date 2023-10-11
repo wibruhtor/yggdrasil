@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use tracing::instrument;
 use uuid::Uuid;
 
 use dao::{TokenDao, TwitchDataDao, UserDao};
@@ -34,10 +35,12 @@ impl AuthService {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn get_authorize_url(&self) -> String {
         self.twitch_api.get_authorize_url(self.scope.clone())
     }
 
+    #[instrument(skip(self, code))]
     pub async fn exchange_code(
         &self,
         code: &str,
@@ -65,6 +68,7 @@ impl AuthService {
         Ok((access_token, refresh_token))
     }
 
+    #[instrument(skip_all)]
     pub async fn validate_token(&self, token: &str) -> AppResult<Claims> {
         let claims = self.jwt.validate(token)?;
 
@@ -83,10 +87,12 @@ impl AuthService {
         }
     }
 
+    #[instrument(skip_all)]
     pub async fn revoke_token(&self, token_id: &Uuid) -> AppResult {
         self.token_dao.delete(token_id).await
     }
 
+    #[instrument(skip(self))]
     pub async fn refresh_token(&self, claims: &Claims) -> AppResult<(String, String)> {
         let token = self.token_dao.refresh(&claims.jti).await?;
 

@@ -14,5 +14,7 @@ uuid = { workspace = true }
 axum = { workspace = true }
 # Security
 validator = { workspace = true }
+# Observability
+tracing-opentelemetry-instrumentation-sdk = { workspace = true }
 # Utilities
 anyhow = { workspace = true }

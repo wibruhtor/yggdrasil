@@ -1,5 +1,6 @@
 use axum::http::StatusCode;
 use magic_crypt::{new_magic_crypt, MagicCrypt256, MagicCryptTrait};
+use tracing::instrument;
 
 use types::error::{AppError, AppResult};
 
@@ -14,20 +15,24 @@ impl Crypt {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn encrypt(&self, data: &[u8]) -> Vec<u8> {
         self.cipher.encrypt_bytes_to_bytes(data)
     }
 
+    #[instrument(skip_all)]
     pub fn encrypt_str(&self, data: &str) -> String {
         self.cipher.encrypt_str_to_base64(data)
     }
 
+    #[instrument(skip_all)]
     pub fn decrypt(&self, data: &[u8]) -> AppResult<Vec<u8>> {
         self.cipher
             .decrypt_bytes_to_bytes(data)
             .map_err(|e| Crypt::FAIL_DECRYPT_BYTES_ERROR.clone().cause(e.into()))
     }
 
+    #[instrument(skip_all)]
     pub fn decrypt_str(&self, data: &str) -> AppResult<String> {
         self.cipher
             .decrypt_base64_to_string(data)

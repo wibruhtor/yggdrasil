@@ -3,6 +3,7 @@ use chrono::{Duration, NaiveDateTime};
 use jsonwebtoken::errors::ErrorKind;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use tracing::instrument;
 use uuid::Uuid;
 
 use types::error::{AppError, AppResult};
@@ -30,6 +31,7 @@ impl JwtMaker {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn validate(&self, token: &str) -> AppResult<Claims> {
         let token_data = decode::<Claims>(
             token,
@@ -46,6 +48,7 @@ impl JwtMaker {
         Ok(token_data.claims)
     }
 
+    #[instrument(skip(self, id))]
     pub fn generate_access_token(
         &self,
         id: &Uuid,
@@ -57,6 +60,7 @@ impl JwtMaker {
         self.generate_token(id, user_id, username, TokenType::Access, &duration, time)
     }
 
+    #[instrument(skip(self, id))]
     pub fn generate_refresh_token(
         &self,
         id: &Uuid,
@@ -68,6 +72,7 @@ impl JwtMaker {
         self.generate_token(id, user_id, username, TokenType::Refresh, &duration, time)
     }
 
+    #[instrument(skip(self, id))]
     fn generate_token(
         &self,
         id: &Uuid,
@@ -161,8 +166,9 @@ jwt_errors! {
 #[cfg(test)]
 pub mod tests {
     use chrono::{Duration, NaiveDateTime};
-    use fake::{faker::name::en::Name, Dummy, Fake, Faker};
     use uuid::Uuid;
+
+    use fake::{faker::name::en::Name, Dummy, Fake, Faker};
 
     use crate::jwt::{JwtMaker, TokenType, ACCESS_TOKEN_TTL_IN_HOURS, REFRESH_TOKEN_TTL_IN_DAYS};
 

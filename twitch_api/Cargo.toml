@@ -14,5 +14,6 @@ chrono = { workspace = true }
 # Axum
 axum = { workspace = true }
 # Observability
+tracing = { workspace = true }
 # Utilities
 reqwest = { workspace = true }

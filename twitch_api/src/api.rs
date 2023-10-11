@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use chrono::{Duration, Utc};
 use reqwest::{Client, RequestBuilder, Response, Url};
 use serde::de::DeserializeOwned;
+use tracing::instrument;
 
 use config::TwitchConfig;
 use types::error::{AppError, AppResult};
@@ -30,6 +31,7 @@ impl TwitchApi {
         }
     }
 
+    #[instrument(skip(self))]
     pub fn get_authorize_url(&self, scope: Vec<Scope>) -> String {
         let scope: Vec<String> = scope.iter().map(Scope::string).collect();
         format!(
@@ -41,6 +43,7 @@ impl TwitchApi {
         )
     }
 
+    #[instrument(skip(self))]
     pub async fn get_user_info(&self, login: &str) -> AppResult<UserInfo> {
         let query_params: HashMap<&str, &str> = HashMap::from([("login", login)]);
 
@@ -68,6 +71,7 @@ impl TwitchApi {
         }
     }
 
+    #[instrument(skip(self))]
     pub async fn get_global_emotes(&self) -> AppResult<Vec<Emote>> {
         let request = self.request("/chat/emotes/global", None).await?;
 
@@ -93,6 +97,7 @@ impl TwitchApi {
         Ok(emotes)
     }
 
+    #[instrument(skip(self))]
     pub async fn get_channel_emotes(&self, channel_id: &str) -> AppResult<Vec<Emote>> {
         let query_params: HashMap<&str, &str> = HashMap::from([("broadcaster_id", channel_id)]);
 
@@ -120,6 +125,7 @@ impl TwitchApi {
         Ok(emotes)
     }
 
+    #[instrument(skip(self))]
     pub async fn get_global_badges(&self) -> AppResult<Vec<Badge>> {
         let request = self.request("/chat/badges/global", None).await?;
 
@@ -145,6 +151,7 @@ impl TwitchApi {
         Ok(badges)
     }
 
+    #[instrument(skip(self))]
     pub async fn get_channel_badges(&self, channel_id: &str) -> AppResult<Vec<Badge>> {
         let query_params: HashMap<&str, &str> = HashMap::from([("broadcaster_id", channel_id)]);
 
@@ -172,6 +179,7 @@ impl TwitchApi {
         Ok(badges)
     }
 
+    #[instrument(skip_all)]
     pub async fn exchange_code(&self, code: &str) -> AppResult<(GetUserTokenResponse, UserInfo)> {
         let response = self.get_user_token(code).await?;
         let user_info = self
@@ -181,6 +189,7 @@ impl TwitchApi {
         Ok((response, user_info))
     }
 
+    #[instrument(skip_all)]
     async fn get_user_token(&self, code: &str) -> AppResult<GetUserTokenResponse> {
         let form = HashMap::from([
             ("client_id", self.twitch_config.client_id()),
@@ -211,6 +220,7 @@ impl TwitchApi {
         self.parse_json::<GetUserTokenResponse>(response).await
     }
 
+    #[instrument(skip_all)]
     async fn get_user_info_by_user_token(&self, token: &str) -> AppResult<UserInfo> {
         let client = Client::new();
 
@@ -241,6 +251,7 @@ impl TwitchApi {
         }
     }
 
+    #[instrument(skip_all)]
     async fn get_app_access_token(&self) -> AppResult<String> {
         let token = self.token.read().unwrap();
         if !token.is_expired() {
@@ -284,6 +295,7 @@ impl TwitchApi {
         Ok(get_app_access_token_response.access_token)
     }
 
+    #[instrument(skip_all)]
     async fn parse_json<T: DeserializeOwned>(&self, response: Response) -> AppResult<T> {
         response.json::<T>().await.map_err(|e| {
             TwitchApi::FAIL_PARSE_JSON_OF_RESPONSE_ERROR
@@ -292,6 +304,7 @@ impl TwitchApi {
         })
     }
 
+    #[instrument(skip_all)]
     async fn request(
         &self,
         path: &str,

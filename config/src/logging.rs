@@ -11,7 +11,7 @@ pub struct LoggingConfig {
 
 impl LoggingConfig {
     pub fn load() -> AppResult<Self> {
-        Ok(LoggingConfig {
+        let config = LoggingConfig {
             level: match env::var("LOGGING_LEVEL")
                 .unwrap_or("INFO".to_string())
                 .to_lowercase()
@@ -23,7 +23,11 @@ impl LoggingConfig {
                 "trace" => Level::TRACE,
                 _ => Level::INFO,
             },
-        })
+        };
+
+        env::set_var("RUST_LOG", config.level.as_str().to_lowercase());
+
+        Ok(config)
     }
 
     pub fn level(&self) -> &Level {

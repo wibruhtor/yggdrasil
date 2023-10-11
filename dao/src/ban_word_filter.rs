@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::http::StatusCode;
 use sqlx::{PgConnection, Pool, Postgres};
+use tracing::instrument;
 use uuid::Uuid;
 
 use types::domain::{BanWordFilter, BanWordFilterInfo, UpdateBanWordFilter};
@@ -16,6 +17,7 @@ impl BanWordFilterDao {
         BanWordFilterDao { pool }
     }
 
+    #[instrument(skip(self))]
     pub async fn is_belongs_to_user(&self, id: &Uuid, user_id: &str) -> AppResult<bool> {
         let rec = sqlx::query!(
             r#"SELECT count(id) FROM ban_word_filters WHERE id = $1 AND user_id = $2 LIMIT 1"#,
@@ -34,6 +36,7 @@ impl BanWordFilterDao {
         Ok(is_belongs_to_user)
     }
 
+    #[instrument(skip(self))]
     pub async fn create(&self, user_id: &str, name: &str) -> AppResult<BanWordFilter> {
         let raw_ban_word_filter = sqlx::query_as!(
             RawBanWordFilter,
@@ -54,6 +57,7 @@ impl BanWordFilterDao {
         Ok(raw_ban_word_filter.into())
     }
 
+    #[instrument(skip(self))]
     pub async fn get(&self, id: &Uuid) -> AppResult<BanWordFilter> {
         let raw_ban_word_filter = sqlx::query_as!(
             RawBanWordFilter,
@@ -67,6 +71,7 @@ impl BanWordFilterDao {
         Ok(raw_ban_word_filter.into())
     }
 
+    #[instrument(skip(self))]
     pub async fn get_all_by_user_id(&self, user_id: &str) -> AppResult<Vec<BanWordFilterInfo>> {
         let raw_ban_word_filter_infos = sqlx::query_as!(
             RawBanWordFilterInfo,
@@ -86,6 +91,7 @@ impl BanWordFilterDao {
         Ok(filters)
     }
 
+    #[instrument(skip(self, update_ban_word_filter))]
     pub async fn update(
         &self,
         id: &Uuid,
@@ -144,6 +150,7 @@ impl BanWordFilterDao {
         Ok(raw_ban_word_filter.into())
     }
 
+    #[instrument(skip(self))]
     pub async fn delete(&self, id: &Uuid) -> AppResult {
         let rec = sqlx::query!(r#"DELETE FROM ban_word_filters WHERE id = $1"#, id,)
             .execute(self.pool.as_ref())
@@ -157,6 +164,7 @@ impl BanWordFilterDao {
         }
     }
 
+    #[instrument(skip(self))]
     async fn ban_words(&self, id: &Uuid) -> AppResult<Vec<String>> {
         let recs = sqlx::query!(
             r#"SELECT word FROM ban_words WHERE ban_word_filter_id = $1"#,
@@ -171,6 +179,7 @@ impl BanWordFilterDao {
         Ok(ban_words)
     }
 
+    #[instrument(skip(self, conn))]
     async fn create_ban_words(
         &self,
         id: &Uuid,
@@ -189,6 +198,7 @@ impl BanWordFilterDao {
         Ok(())
     }
 
+    #[instrument(skip(self, conn))]
     async fn delete_ban_words(
         &self,
         id: &Uuid,

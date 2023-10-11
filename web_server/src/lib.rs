@@ -4,14 +4,16 @@ use std::sync::Arc;
 use axum::http::StatusCode;
 use axum::routing::get;
 use axum::{Extension, Server};
+use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use tokio::signal;
 
 use config::HttpConfig;
 use service::{AuthService, BanWordService, ChatService, SessionService, TwitchService};
-use types::error::AppError;
 
+use crate::middleware::TracingLayer;
 use crate::routes::routes;
 
+mod middleware;
 mod routes;
 
 pub struct Services {
@@ -26,13 +28,14 @@ pub async fn run(config: HttpConfig, services: Services) {
     let addr = format!("{}:{}", config.host(), config.port());
 
     let app = routes()
-        .route("/pepega", get(|| async move { AppError::UNEXPECTED }))
         .layer(Extension(services.auth))
         .layer(Extension(services.session))
         .layer(Extension(services.twitch))
         .layer(Extension(services.chat))
         .layer(Extension(services.ban_word))
-        .route("/health", get(|| async move { StatusCode::NO_CONTENT }));
+        .layer(OtelInResponseLayer::default())
+        .layer(TracingLayer::default())
+        .route("/health", get(move || async { StatusCode::NO_CONTENT }));
 
     tracing::warn!("listening on http://{}", addr);
 
@@ -67,4 +70,5 @@ async fn shutdown_signal() {
     }
 
     tracing::warn!("signal received, starting graceful shutdown");
+    opentelemetry::global::shutdown_tracer_provider();
 }

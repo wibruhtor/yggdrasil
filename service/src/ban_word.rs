@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use axum::http::StatusCode;
+use tracing::instrument;
 use uuid::Uuid;
 
 use dao::BanWordFilterDao;
@@ -18,18 +19,22 @@ impl BanWordService {
         }
     }
 
+    #[instrument(skip(self))]
     pub async fn create_filter(&self, user_id: &str, name: &str) -> AppResult<BanWordFilter> {
         self.ban_word_filter_dao.create(user_id, name).await
     }
 
+    #[instrument(skip(self))]
     pub async fn get_filter(&self, ban_word_filter_id: &Uuid) -> AppResult<BanWordFilter> {
         self.ban_word_filter_dao.get(ban_word_filter_id).await
     }
 
+    #[instrument(skip(self))]
     pub async fn get_all_filters(&self, user_id: &str) -> AppResult<Vec<BanWordFilterInfo>> {
         self.ban_word_filter_dao.get_all_by_user_id(user_id).await
     }
 
+    #[instrument(skip(self))]
     pub async fn update_filter(
         &self,
         user_id: &str,
@@ -44,6 +49,7 @@ impl BanWordService {
             .await
     }
 
+    #[instrument(skip(self))]
     pub async fn delete_filter(&self, user_id: &str, ban_word_filter_id: &Uuid) -> AppResult {
         self.check_user_owning_of_filter_by_id(user_id, ban_word_filter_id)
             .await?;
@@ -51,6 +57,7 @@ impl BanWordService {
         self.ban_word_filter_dao.delete(ban_word_filter_id).await
     }
 
+    #[instrument(skip(self))]
     async fn check_user_owning_of_filter_by_id(
         &self,
         user_id: &str,

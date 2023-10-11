@@ -25,15 +25,7 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> AppResult<Self> {
-        let span = tracing::debug_span!("load config");
-        let _span = span.enter();
-
-        match dotenvy::dotenv() {
-            Ok(_) => {}
-            Err(e) => {
-                tracing::warn!("fail load dotenv: {}", e)
-            }
-        };
+        dotenvy::dotenv().unwrap();
 
         Ok(Config {
             logging_config: LoggingConfig::load()?,

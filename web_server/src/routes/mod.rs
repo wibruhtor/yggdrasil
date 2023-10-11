@@ -3,8 +3,12 @@ use axum::Router;
 
 use types::error::AppError;
 
+mod auth;
+
 pub fn routes() -> Router {
-    Router::new().fallback(handler_404)
+    Router::new()
+        .nest("/auth", auth::routes())
+        .fallback(handler_404)
 }
 
 async fn handler_404() -> AppError {

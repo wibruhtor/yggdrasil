@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::http::StatusCode;
 use sqlx::{Pool, Postgres};
+use tracing::instrument;
 
 use types::error::{AppError, AppResult};
 use types::twitch;
@@ -15,6 +16,7 @@ impl TwitchDataDao {
         TwitchDataDao { pool }
     }
 
+    #[instrument(skip_all)]
     pub async fn create_or_update(
         &self,
         user_id: &str,
@@ -26,6 +28,7 @@ impl TwitchDataDao {
         }
     }
 
+    #[instrument(skip_all)]
     async fn create(&self, user_id: &str, refresh_token: &str) -> AppResult<twitch::Data> {
         let raw_twitch_data = sqlx::query_as!(
             RawTwitchData,
@@ -45,6 +48,7 @@ impl TwitchDataDao {
         Ok(raw_twitch_data.into())
     }
 
+    #[instrument(skip_all)]
     async fn update(&self, user_id: &str, refresh_token: &str) -> AppResult<twitch::Data> {
         let raw_twitch_data = sqlx::query_as!(
             RawTwitchData,

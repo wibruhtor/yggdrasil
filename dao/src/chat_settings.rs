@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::http::StatusCode;
 use sqlx::{PgConnection, Pool, Postgres};
+use tracing::instrument;
 use uuid::Uuid;
 
 use types::domain::{
@@ -19,6 +20,7 @@ impl ChatSettingsDao {
         ChatSettingsDao { pool }
     }
 
+    #[instrument(skip(self))]
     pub async fn is_belongs_to_user(&self, id: &Uuid, user_id: &str) -> AppResult<bool> {
         let rec = sqlx::query!(
             r#"SELECT count(id) FROM chat_settings WHERE id = $1 AND user_id = $2 LIMIT 1"#,
@@ -37,6 +39,7 @@ impl ChatSettingsDao {
         Ok(is_belongs_to_user)
     }
 
+    #[instrument(skip(self))]
     pub async fn create(
         &self,
         user_id: &str,
@@ -63,6 +66,7 @@ impl ChatSettingsDao {
         Ok(raw_chat_settings.into())
     }
 
+    #[instrument(skip(self))]
     pub async fn get(&self, id: &Uuid) -> AppResult<ChatSettings> {
         let raw_chat_settings = sqlx::query_as!(
             RawChatSettings,
@@ -84,6 +88,7 @@ impl ChatSettingsDao {
         Ok(chat_settings)
     }
 
+    #[instrument(skip(self))]
     pub async fn get_all_by_user_id(&self, user_id: &str) -> AppResult<Vec<ChatSettingsInfo>> {
         let raw_chat_settings_infos = sqlx::query_as!(
             RawChatSettingsInfo,
@@ -103,6 +108,7 @@ impl ChatSettingsDao {
         Ok(chat_settings_infos)
     }
 
+    #[instrument(skip(self, update_chat_settings))]
     pub async fn update(
         &self,
         id: &Uuid,
@@ -182,6 +188,7 @@ impl ChatSettingsDao {
         Ok(chat_settings)
     }
 
+    #[instrument(skip(self))]
     pub async fn delete(&self, id: &Uuid) -> AppResult {
         let rec = sqlx::query!(r#"DELETE FROM chat_settings WHERE id = $1"#, id,)
             .execute(self.pool.as_ref())
@@ -195,6 +202,7 @@ impl ChatSettingsDao {
         }
     }
 
+    #[instrument(skip(self))]
     async fn get_custom_nicknames(&self, id: &Uuid) -> AppResult<Vec<CustomNickname>> {
         let raw_custom_nicknames = sqlx::query_as!(
             RawCustomNickname,
@@ -214,6 +222,7 @@ impl ChatSettingsDao {
         Ok(custom_nicknames)
     }
 
+    #[instrument(skip(self))]
     async fn get_hidden_nicknames(&self, id: &Uuid) -> AppResult<Vec<String>> {
         let recs = sqlx::query!(
             r#"SELECT nickname FROM chat_hidden_nicknames WHERE chat_settings_id = $1"#,
@@ -232,6 +241,7 @@ impl ChatSettingsDao {
         Ok(nicknames)
     }
 
+    #[instrument(skip(self, conn))]
     async fn calculate_and_update_custom_nicknames(
         &self,
         id: &Uuid,
@@ -287,6 +297,7 @@ impl ChatSettingsDao {
         Ok(())
     }
 
+    #[instrument(skip(self, conn))]
     async fn create_custom_nicknames(
         &self,
         id: &Uuid,
@@ -313,6 +324,7 @@ impl ChatSettingsDao {
         Ok(())
     }
 
+    #[instrument(skip(self, conn))]
     async fn update_custom_nicknames(
         &self,
         id: &Uuid,
@@ -339,6 +351,7 @@ impl ChatSettingsDao {
         Ok(())
     }
 
+    #[instrument(skip(self, conn))]
     async fn delete_custom_nicknames(
         &self,
         id: &Uuid,
@@ -360,6 +373,8 @@ impl ChatSettingsDao {
 
         Ok(())
     }
+
+    #[instrument(skip(self, conn))]
     async fn calculate_and_update_hidden_nicknames(
         &self,
         id: &Uuid,
@@ -395,6 +410,7 @@ impl ChatSettingsDao {
         Ok(())
     }
 
+    #[instrument(skip(self, conn))]
     async fn create_hidden_nicknames(
         &self,
         id: &Uuid,
@@ -413,6 +429,7 @@ impl ChatSettingsDao {
         Ok(())
     }
 
+    #[instrument(skip(self, conn))]
     async fn delete_hidden_nicknames(
         &self,
         id: &Uuid,

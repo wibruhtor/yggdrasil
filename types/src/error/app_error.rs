@@ -7,6 +7,7 @@ use axum::{
     Json,
 };
 use serde_json::{Map, Value};
+use tracing_opentelemetry_instrumentation_sdk::find_current_trace_id;
 
 pub type AppResult<T = ()> = Result<T, AppError>;
 
@@ -107,6 +108,13 @@ impl IntoResponse for AppError {
             if !other.is_empty() {
                 map.insert("other".to_string(), Value::Object(other));
             }
+        }
+
+        let id = find_current_trace_id();
+
+        if id.is_some() {
+            let id = id.unwrap();
+            map.insert("traceId".to_string(), Value::String(id));
         }
 
         if map.is_empty() {

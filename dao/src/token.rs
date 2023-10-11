@@ -3,6 +3,7 @@ use std::sync::Arc;
 use axum::http::StatusCode;
 use chrono::{NaiveDateTime, Utc};
 use sqlx::{Pool, Postgres};
+use tracing::instrument;
 use uuid::Uuid;
 
 use types::domain::Token;
@@ -19,6 +20,7 @@ impl TokenDao {
         TokenDao { pool, crypt }
     }
 
+    #[instrument(skip(self))]
     pub async fn create(&self, user_id: &str, user_agent: &str, ip: &str) -> AppResult<Token> {
         let now = Utc::now().naive_utc();
         let encrypted_ip = self.crypt.encrypt_str(&ip);
@@ -45,6 +47,7 @@ impl TokenDao {
         raw_token.into_token(&self.crypt)
     }
 
+    #[instrument(skip(self))]
     pub async fn get(&self, id: &Uuid) -> AppResult<Token> {
         let raw_token = sqlx::query_as!(
             RawToken,
@@ -58,6 +61,7 @@ impl TokenDao {
         raw_token.into_token(&self.crypt)
     }
 
+    #[instrument(skip(self))]
     pub async fn get_all_by_user_id(&self, user_id: &str) -> AppResult<Vec<Token>> {
         let raw_tokens = sqlx::query_as!(
             RawToken,
@@ -77,6 +81,7 @@ impl TokenDao {
         Ok(tokens)
     }
 
+    #[instrument(skip(self))]
     pub async fn refresh(&self, id: &Uuid) -> AppResult<Token> {
         let now = Utc::now().naive_utc();
         let raw_token = sqlx::query_as!(
@@ -92,6 +97,7 @@ impl TokenDao {
         raw_token.into_token(&self.crypt)
     }
 
+    #[instrument(skip(self))]
     pub async fn delete(&self, id: &Uuid) -> AppResult {
         let rec = sqlx::query!(r#"DELETE FROM tokens WHERE id = $1"#, id,)
             .execute(self.pool.as_ref())
@@ -105,6 +111,7 @@ impl TokenDao {
         }
     }
 
+    #[instrument(skip(self))]
     pub async fn delete_with_user_id(&self, id: &Uuid, user_id: &str) -> AppResult {
         let rec = sqlx::query!(
             r#"DELETE FROM tokens WHERE id = $1 AND user_id = $2"#,
@@ -122,6 +129,7 @@ impl TokenDao {
         }
     }
 
+    #[instrument(skip(self))]
     pub async fn delete_all_by_user_id_exclude_one(&self, user_id: &str, id: &Uuid) -> AppResult {
         sqlx::query!(
             r#"DELETE FROM tokens WHERE user_id = $1 AND id != $2"#,

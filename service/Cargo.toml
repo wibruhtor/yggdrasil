@@ -14,3 +14,5 @@ utils = { workspace = true }
 uuid = { workspace = true }
 # Axum
 axum = { version = "0.6", features = ["tokio", "json", "headers"] }
+# Observability
+tracing = { workspace = true }

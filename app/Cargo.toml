@@ -12,5 +12,8 @@ twitch_api = { workspace = true }
 types = { workspace = true }
 utils = { workspace = true }
 web_server = { workspace = true }
+# Observability
+axum-tracing-opentelemetry = { workspace = true }
+init-tracing-opentelemetry = { workspace = true }
 # Utilities
 tokio = { workspace = true }

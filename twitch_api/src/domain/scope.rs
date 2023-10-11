@@ -1,4 +1,4 @@
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Scope(&'static str);
 
 impl Scope {

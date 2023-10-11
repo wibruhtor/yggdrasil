@@ -3,6 +3,7 @@ use std::sync::Arc;
 use axum::http::StatusCode;
 use chrono::NaiveDateTime;
 use sqlx::{Pool, Postgres};
+use tracing::instrument;
 
 use types::domain::User;
 use types::error::{AppError, AppResult};
@@ -16,6 +17,7 @@ impl UserDao {
         UserDao { pool }
     }
 
+    #[instrument(skip(self))]
     pub async fn get_or_create(&self, id: &str, username: &str) -> AppResult<User> {
         match self.get(id).await {
             Ok(user) => Ok(user),
@@ -23,6 +25,7 @@ impl UserDao {
         }
     }
 
+    #[instrument(skip(self))]
     async fn create(&self, id: &str, username: &str) -> AppResult<User> {
         let raw_user = sqlx::query_as!(
             RawUser,
@@ -45,6 +48,7 @@ impl UserDao {
         Ok(raw_user.into())
     }
 
+    #[instrument(skip(self))]
     pub async fn get(&self, id: &str) -> AppResult<User> {
         let raw_user = sqlx::query_as!(
             RawUser,
