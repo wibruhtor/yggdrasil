@@ -16,4 +16,5 @@ web_server = { workspace = true }
 axum-tracing-opentelemetry = { workspace = true }
 init-tracing-opentelemetry = { workspace = true }
 # Utilities
+openssl = { workspace = true }
 tokio = { workspace = true }

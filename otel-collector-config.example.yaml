@@ -9,14 +9,14 @@ processors:
 extensions:
   basicauth/otlp:
     client_auth:
-      username: 755035
-      password: glc_eyJvIjoiOTU4MDM5IiwibiI6ImFsbC1vdGVsIiwiayI6IlpXUzc4ODdoWTlPU21HQjMyWTNVNHJpNSIsIm0iOnsiciI6InVzIn19
+      username: <instance_id>
+      password: <token>
 
 exporters:
   otlphttp:
     auth:
       authenticator: basicauth/otlp
-    endpoint: https://otlp-gateway-prod-us-east-0.grafana.net/otlp
+    endpoint: https://otlp-gateway-<zone>.grafana.net/otlp
 
 service:
   extensions: [ basicauth/otlp ]

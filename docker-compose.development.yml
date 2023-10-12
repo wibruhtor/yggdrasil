@@ -1,17 +1,4 @@
 services:
-  app:
-    image: ghcr.io/wibruhtor/yggdrasil:main
-    container_name: yggdrasil
-    restart: on-failure
-    depends_on:
-      pg:
-        condition: service_healthy
-    ports:
-      - 3000:3000
-    env_file:
-      - .env
-    networks:
-      - yggdrasil_network
   pg:
     image: postgres:15
     container_name: wibruhtor-postgres-dev
@@ -22,20 +9,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    env_file:
-      - .env
-    volumes:
-      - ./pg:/var/lib/postgresql/data
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: wibruhtor
+      POSTGRES_PASSWORD: secret-password
     networks:
-      - yggdrasil_network
+      - wibruhtor_network
   otel:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: wibruhtor-otel-collector
     restart: on-failure
+    ports:
+      - 4317:4317
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
-    networks:
-      - yggdrasil_network
 
 networks:
-  yggdrasil_network:
+  wibruhtor_network:
