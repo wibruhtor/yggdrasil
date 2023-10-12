@@ -99,6 +99,33 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let mut map = Map::new();
 
+        if (400u16..500u16).contains(&self.status_code.as_u16()) {
+            tracing::warn!(
+                {
+                    status_code = self.status_code.as_u16(),
+                    message = self.message,
+                    cause = match &self.cause {
+                        Some(v) => format!("{}", v),
+                        None => "none".to_string()
+                    },
+                },
+                "into response"
+            );
+        }
+        if (500u16..600u16).contains(&self.status_code.as_u16()) {
+            tracing::error!(
+                {
+                    status_code = self.status_code.as_u16(),
+                    message = self.message,
+                    cause = match &self.cause {
+                        Some(v) => format!("{}", v),
+                        None => "none".to_string()
+                    },
+                },
+                "into response"
+            );
+        }
+
         map.insert(
             "message".to_string(),
             Value::String(self.message.unwrap_or("unexpected error").to_string()),

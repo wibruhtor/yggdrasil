@@ -15,6 +15,7 @@ axum = { workspace = true }
 # Security
 validator = { workspace = true }
 # Observability
+tracing = { workspace = true }
 tracing-opentelemetry-instrumentation-sdk = { workspace = true }
 # Utilities
 anyhow = { workspace = true }

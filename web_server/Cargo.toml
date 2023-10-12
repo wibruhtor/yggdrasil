@@ -30,6 +30,7 @@ opentelemetry = { workspace = true }
 opentelemetry_api = { workspace = true }
 axum-tracing-opentelemetry = { workspace = true }
 # Utilities
+anyhow = { workspace = true }
 tokio = { workspace = true }
 futures-util = { workspace = true }
 pin-project = { workspace = true }

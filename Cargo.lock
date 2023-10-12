@@ -2919,6 +2919,7 @@ dependencies = [
  "chrono",
  "serde",
  "serde_json",
+ "tracing",
  "tracing-opentelemetry-instrumentation-sdk",
  "uuid",
  "validator",
@@ -3172,6 +3173,7 @@ dependencies = [
 name = "web_server"
 version = "1.0.0"
 dependencies = [
+ "anyhow",
  "axum",
  "axum-client-ip",
  "axum-tracing-opentelemetry",
