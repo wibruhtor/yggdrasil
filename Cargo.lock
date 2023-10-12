@@ -3191,6 +3191,7 @@ dependencies = [
  "tracing-opentelemetry-instrumentation-sdk",
  "types",
  "utils",
+ "uuid",
  "validator",
 ]
 
