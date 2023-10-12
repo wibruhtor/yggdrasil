@@ -18,6 +18,8 @@ axum-client-ip = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }
 tower-service = { workspace = true }
+# Security
+validator = { workspace = true }
 # Observability
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }

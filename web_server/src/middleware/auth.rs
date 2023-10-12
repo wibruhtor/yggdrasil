@@ -22,6 +22,6 @@ pub async fn auth_middleware<B>(
     if claims.typ != TokenType::Access {
         return Err(JwtMaker::INVALID_TOKEN_ERROR);
     }
-    request.extensions_mut().insert(claims);
+    request.extensions_mut().insert(Arc::new(claims));
     Ok(next.run(request).await)
 }

@@ -4,5 +4,4 @@ use serde::Deserialize;
 pub struct GetUserTokenResponse {
     pub access_token: String,
     pub refresh_token: String,
-    pub scope: Vec<String>,
 }
