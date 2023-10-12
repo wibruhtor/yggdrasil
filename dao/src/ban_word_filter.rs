@@ -40,7 +40,7 @@ impl BanWordFilterDao {
     pub async fn create(&self, user_id: &str, name: &str) -> AppResult<BanWordFilter> {
         let raw_ban_word_filter = sqlx::query_as!(
             RawBanWordFilter,
-            r#"INSERT INTO ban_word_filters (id, name, user_id) VALUES ($1, $2, $3) RETURNING id, name, ARRAY[]::varchar[] as ban_words, user_id"#,
+            r#"INSERT INTO ban_word_filters (id, name, user_id) VALUES ($1, $2, $3) RETURNING id, name, user_id"#,
             Uuid::new_v4(),
             name,
             user_id,
@@ -61,14 +61,20 @@ impl BanWordFilterDao {
     pub async fn get(&self, id: &Uuid) -> AppResult<BanWordFilter> {
         let raw_ban_word_filter = sqlx::query_as!(
             RawBanWordFilter,
-            r#"SELECT f.id, f.name, array_agg(b.word) as ban_words, f.user_id FROM ban_word_filters as f INNER JOIN ban_words as b on f.id = b.ban_word_filter_id WHERE f.id = $1 GROUP by f.id"#,
+            r#"SELECT id, name, user_id FROM ban_word_filters WHERE id = $1 LIMIT 1"#,
             id,
         )
-            .fetch_one(self.pool.as_ref())
-            .await
-            .map_err(|e| BanWordFilterDao::FAIL_QUERY_ERROR.clone().cause(e.into()))?;
+        .fetch_one(self.pool.as_ref())
+        .await
+        .map_err(|e| BanWordFilterDao::FAIL_QUERY_ERROR.clone().cause(e.into()))?;
 
-        Ok(raw_ban_word_filter.into())
+        let ban_words = self.ban_words(id).await?;
+
+        let mut ban_word_filter: BanWordFilter = raw_ban_word_filter.into();
+
+        ban_word_filter.ban_words = ban_words;
+
+        Ok(ban_word_filter)
     }
 
     #[instrument(skip(self))]
@@ -133,13 +139,13 @@ impl BanWordFilterDao {
 
         let raw_ban_word_filter = sqlx::query_as!(
             RawBanWordFilter,
-            r#"with f as (UPDATE ban_word_filters SET name = $1 WHERE id = $2 RETURNING id, name, user_id) select f.id, f.name, array_agg(word) as ban_words, f.user_id from ban_words INNER JOIN f ON ban_words.ban_word_filter_id = f.id where ban_words.ban_word_filter_id = f.id GROUP BY f.id, f.name, f.user_id"#,
+            r#"UPDATE ban_word_filters SET name = $1 WHERE id = $2 RETURNING id, name, user_id"#,
             update_ban_word_filter.name,
             id,
         )
-            .fetch_one(&mut *tx)
-            .await
-            .map_err(|e| BanWordFilterDao::FAIL_QUERY_ERROR.clone().cause(e.into()))?;
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|e| BanWordFilterDao::FAIL_QUERY_ERROR.clone().cause(e.into()))?;
 
         tx.commit().await.map_err(|e| {
             BanWordFilterDao::FAIL_COMMIT_TRANSACTION_ERROR
@@ -147,7 +153,13 @@ impl BanWordFilterDao {
                 .cause(e.into())
         })?;
 
-        Ok(raw_ban_word_filter.into())
+        let ban_words = self.ban_words(id).await?;
+
+        let mut ban_word_filter: BanWordFilter = raw_ban_word_filter.into();
+
+        ban_word_filter.ban_words = ban_words;
+
+        Ok(ban_word_filter)
     }
 
     #[instrument(skip(self))]
@@ -221,7 +233,6 @@ impl BanWordFilterDao {
 struct RawBanWordFilter {
     pub id: Uuid,
     pub name: String,
-    pub ban_words: Option<Vec<String>>,
     pub user_id: String,
 }
 
@@ -230,10 +241,7 @@ impl Into<BanWordFilter> for RawBanWordFilter {
         BanWordFilter {
             id: self.id,
             name: self.name,
-            ban_words: match self.ban_words {
-                Some(ban_words) => ban_words,
-                None => Vec::new(),
-            },
+            ban_words: Vec::new(),
             user_id: self.user_id,
         }
     }

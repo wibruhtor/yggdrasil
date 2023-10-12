@@ -70,7 +70,7 @@ impl ChatSettingsDao {
     pub async fn get(&self, id: &Uuid) -> AppResult<ChatSettings> {
         let raw_chat_settings = sqlx::query_as!(
             RawChatSettings,
-            r#"SELECT id, name, chat_type, nickname_color, background_color, text_color, gradient_only_for_custom_nicknames, margin_top, margin_right, margin_bottom, margin_left, padding_top, padding_right, padding_bottom, padding_left, border_top_left_radius, border_top_right_radius, border_bottom_left_radius, border_bottom_right_radius, max_messages, hide_message_pattern, hide_point_rewards, hide_links, link_replacement, ban_word_replacement, ban_word_filter_id, font_family, nickname_font_weight, text_font_weight, font_size, user_id FROM chat_settings WHERE id = $1"#,
+            r#"SELECT id, name, chat_type, nickname_color, background_color, text_color, gradient_only_for_custom_nicknames, margin_top, margin_right, margin_bottom, margin_left, padding_top, padding_right, padding_bottom, padding_left, border_top_left_radius, border_top_right_radius, border_bottom_left_radius, border_bottom_right_radius, max_messages, hide_message_pattern, hide_point_rewards, hide_links, link_replacement, ban_word_replacement, ban_word_filter_id, font_family, nickname_font_weight, text_font_weight, font_size, user_id FROM chat_settings WHERE id = $1 LIMIT 1"#,
             id,
         )
             .fetch_one(self.pool.as_ref())

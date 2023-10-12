@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "with f as (UPDATE ban_word_filters SET name = $1 WHERE id = $2 RETURNING id, name, user_id) select f.id, f.name, array_agg(word) as ban_words, f.user_id from ban_words INNER JOIN f ON ban_words.ban_word_filter_id = f.id where ban_words.ban_word_filter_id = f.id GROUP BY f.id, f.name, f.user_id",
+  "query": "UPDATE ban_word_filters SET name = $1 WHERE id = $2 RETURNING id, name, user_id",
   "describe": {
     "columns": [
       {
@@ -15,11 +15,6 @@
       },
       {
         "ordinal": 2,
-        "name": "ban_words",
-        "type_info": "VarcharArray"
-      },
-      {
-        "ordinal": 3,
         "name": "user_id",
         "type_info": "Varchar"
       }
@@ -33,9 +28,8 @@
     "nullable": [
       false,
       false,
-      null,
       false
     ]
   },
-  "hash": "26523f60d080708786e8a751e1ca6a4e21ca2559dc6916c6d62842e5b6128972"
+  "hash": "66ef789b6ba751904d309e017e33935ad2b7eec529d7e5fe800f808f1f8e3132"
 }
