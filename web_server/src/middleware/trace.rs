@@ -1,21 +1,20 @@
-use std::error::Error;
-use std::future::Future;
-use std::pin::Pin;
-use std::task::{Context, Poll};
-
 use axum::extract::MatchedPath;
 use axum::http;
 use axum_tracing_opentelemetry::middleware::Filter;
 use http::{Request, Response};
 use pin_project::pin_project;
+use std::error::Error;
+use std::future::Future;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 use tower::Layer;
 use tower_service::Service;
 use tracing::field::Empty;
 use tracing::Span;
+use tracing_opentelemetry_instrumentation_sdk::{http as otel_http, TRACING_TARGET};
 use tracing_opentelemetry_instrumentation_sdk::http::{
     http_flavor, http_host, http_method, url_scheme, user_agent,
 };
-use tracing_opentelemetry_instrumentation_sdk::{http as otel_http, TRACING_TARGET};
 
 #[derive(Debug, Clone, Default)]
 pub struct TracingLayer {
@@ -50,11 +49,11 @@ pub struct TracingService<S> {
 }
 
 impl<S, B, B2> Service<Request<B>> for TracingService<S>
-where
-    S: Service<Request<B>, Response = Response<B2>> + Clone + Send + 'static,
-    S::Error: Error + 'static, //fmt::Display + 'static,
-    S::Future: Send + 'static,
-    B: Send + 'static,
+    where
+        S: Service<Request<B>, Response=Response<B2>> + Clone + Send + 'static,
+        S::Error: Error + 'static, //fmt::Display + 'static,
+        S::Future: Send + 'static,
+        B: Send + 'static,
 {
     type Response = S::Response;
     type Error = S::Error;
@@ -100,9 +99,9 @@ pub struct ResponseFuture<F> {
 }
 
 impl<Fut, ResBody, E> Future for ResponseFuture<Fut>
-where
-    Fut: Future<Output = Result<Response<ResBody>, E>>,
-    E: Error + 'static,
+    where
+        Fut: Future<Output=Result<Response<ResBody>, E>>,
+        E: Error + 'static,
 {
     type Output = Result<Response<ResBody>, E>;
 
@@ -132,7 +131,7 @@ fn client_ip<B>(req: &Request<B>) -> String {
     if value.is_err() {
         return "".to_string();
     }
-    let ips: Vec<&str> = value.unwrap().split(", ").collect();
+    let ips: Vec<&str> = value.unwrap().split(",").map(|v| v.trim()).collect();
 
     ips.first().unwrap_or(&"").to_string()
 }
