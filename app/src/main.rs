@@ -29,15 +29,15 @@ async fn main() -> AppResult {
 
     let auth_service = Arc::new(AuthService::new(
         jwt,
-        Arc::clone(&twitch_api),
-        Arc::clone(&user_dao),
-        Arc::clone(&twitch_data_dao),
-        Arc::clone(&token_dao),
+        twitch_api.clone(),
+        user_dao.clone(),
+        twitch_data_dao.clone(),
+        token_dao.clone(),
     ));
-    let session_service = Arc::new(SessionService::new(Arc::clone(&token_dao)));
-    let twitch_service = Arc::new(TwitchService::new(Arc::clone(&twitch_api)));
-    let ban_word_service = Arc::new(BanWordService::new(Arc::clone(&ban_word_filter_dao)));
-    let chat_service = Arc::new(ChatService::new(Arc::clone(&chat_settings_dao)));
+    let session_service = Arc::new(SessionService::new(token_dao.clone()));
+    let twitch_service = Arc::new(TwitchService::new(twitch_api.clone()));
+    let ban_word_service = Arc::new(BanWordService::new(ban_word_filter_dao.clone()));
+    let chat_service = Arc::new(ChatService::new(chat_settings_dao.clone()));
 
     web_server::run(
         config.http_config().clone(),

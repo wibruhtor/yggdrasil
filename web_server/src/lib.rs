@@ -1,16 +1,21 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 
-use axum::http::StatusCode;
+use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN, USER_AGENT};
+use axum::http::{HeaderValue, Method, StatusCode};
+use axum::middleware::from_fn;
 use axum::routing::get;
 use axum::{Extension, Server};
 use axum_tracing_opentelemetry::middleware::OtelInResponseLayer;
 use tokio::signal;
+use tower_http::cors::CorsLayer;
+use tower_http::timeout::TimeoutLayer;
 
 use config::HttpConfig;
 use service::{AuthService, BanWordService, ChatService, SessionService, TwitchService};
 
-use crate::middleware::TracingLayer;
+use crate::middleware::{error_middleware, TracingLayer};
 use crate::routes::routes;
 
 mod middleware;
@@ -33,9 +38,17 @@ pub async fn run(config: HttpConfig, services: Services) {
         .layer(Extension(services.twitch))
         .layer(Extension(services.chat))
         .layer(Extension(services.ban_word))
+        .layer(from_fn(error_middleware))
         .layer(OtelInResponseLayer::default())
         .layer(TracingLayer::default())
-        .route("/health", get(move || async { StatusCode::NO_CONTENT }));
+        .route("/health", get(move || async { StatusCode::NO_CONTENT }))
+        .layer(
+            CorsLayer::new()
+                .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+                .allow_headers([AUTHORIZATION, ACCEPT, ORIGIN, CONTENT_TYPE, USER_AGENT])
+                .allow_origin(config.allow_origin().parse::<HeaderValue>().unwrap()),
+        )
+        .layer(TimeoutLayer::new(Duration::from_secs(10)));
 
     tracing::warn!("listening on http://{}", addr);
 
