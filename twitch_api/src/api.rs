@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use std::ops::Add;
-use std::sync::RwLock;
 
 use axum::http::StatusCode;
 use chrono::{Duration, Utc};
 use reqwest::{Client, RequestBuilder, Response, Url};
 use serde::de::DeserializeOwned;
+use tokio::sync::RwLock;
 use tracing::instrument;
 
 use config::TwitchConfig;
@@ -20,14 +20,14 @@ use crate::domain::{
 
 pub struct TwitchApi {
     twitch_config: TwitchConfig,
-    token: RwLock<AppAccessToken>,
+    app_token: RwLock<AppAccessToken>,
 }
 
 impl TwitchApi {
     pub fn new(twitch_config: TwitchConfig) -> Self {
         TwitchApi {
             twitch_config,
-            token: RwLock::default(),
+            app_token: RwLock::new(AppAccessToken::default()),
         }
     }
 
@@ -253,10 +253,12 @@ impl TwitchApi {
 
     #[instrument(skip_all)]
     async fn get_app_access_token(&self) -> AppResult<String> {
-        let token = self.token.read().unwrap();
-        if !token.is_expired() {
-            return Ok(token.token().unwrap());
+        let app_token = self.app_token.read().await;
+        if !app_token.is_expired() {
+            let token = app_token.token().ok_or(AppError::UNEXPECTED)?;
+            return Ok(token);
         }
+        drop(app_token);
         let form = HashMap::from([
             ("client_id", self.twitch_config.client_id()),
             ("client_secret", self.twitch_config.client_secret()),
@@ -290,8 +292,9 @@ impl TwitchApi {
             .add(Duration::seconds(get_app_access_token_response.expires_in))
             .naive_utc();
 
-        let mut token = self.token.write().unwrap();
-        token.set(&get_app_access_token_response.access_token, &expired_at);
+        let mut token = self.app_token.write().await;
+        *token = AppAccessToken::new(&get_app_access_token_response.access_token, &expired_at);
+
         Ok(get_app_access_token_response.access_token)
     }
 

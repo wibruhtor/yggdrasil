@@ -17,3 +17,4 @@ axum = { workspace = true }
 tracing = { workspace = true }
 # Utilities
 reqwest = { workspace = true }
+tokio = { workspace = true }
